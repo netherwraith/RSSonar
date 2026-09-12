@@ -1,0 +1,26 @@
+services:
+  rssonar:
+    build: .
+    restart: unless-stopped
+    ports:
+      - "${RSSONAR_BIND:-127.0.0.1}:8765:8765"
+    environment:
+      ADMIN_TOKEN: ${ADMIN_TOKEN:?Set ADMIN_TOKEN in .env}
+      PUBLIC_URL: ${PUBLIC_URL:-http://localhost:8765}
+      POLL_MINUTES: ${POLL_MINUTES:-15}
+      SIGNAL_API_URL: ${SIGNAL_API_URL:-}
+      SIGNAL_NUMBER: ${SIGNAL_NUMBER:-}
+      SIGNAL_RECIPIENTS: ${SIGNAL_RECIPIENTS:-}
+    volumes:
+      - ./data:/app/data
+
+  signal-api:
+    image: bbernhard/signal-cli-rest-api:latest
+    profiles: ["signal"]
+    restart: unless-stopped
+    environment:
+      MODE: json-rpc
+    ports:
+      - "127.0.0.1:8080:8080"
+    volumes:
+      - ./signal-data:/home/.local/share/signal-cli
