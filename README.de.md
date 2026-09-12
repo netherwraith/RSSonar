@@ -1,5 +1,7 @@
 # RSSonar
 
+<img src="static/logo-wordmark.svg" alt="RSSonar-Logo" width="420">
+
 [English documentation](README.MD)
 
 **Open-Source-Releases im Blick.** RSSonar sammelt Release-Einträge aus beliebig vielen RSS- und Atom-Feeds, zeigt sie chronologisch auf einer Webseite und stellt unter `/rss.xml` einen gemeinsamen Feed bereit. Neue Einträge können optional per Signal zugestellt werden.

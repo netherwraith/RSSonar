@@ -256,9 +256,9 @@ class Handler(BaseHTTPRequestHandler):
 
     def do_GET(self):
         path = urllib.parse.urlsplit(self.path).path
-        if path in ("/", "/index.html", "/app.js", "/style.css"):
+        if path in ("/", "/index.html", "/app.js", "/style.css", "/logo.svg"):
             name = "index.html" if path == "/" else path.lstrip("/")
-            content_type = {"index.html": "text/html", "app.js": "text/javascript", "style.css": "text/css"}[name]
+            content_type = {"index.html": "text/html", "app.js": "text/javascript", "style.css": "text/css", "logo.svg": "image/svg+xml"}[name]
             return self.reply(200, (ROOT / "static" / name).read_bytes(), content_type + "; charset=utf-8")
         if path == "/api/state":
             with lock:

@@ -1,5 +1,7 @@
 # RSSonar
 
+<img src="static/logo-wordmark.svg" alt="RSSonar logo" width="420">
+
 **Keep open-source releases in view.** RSSonar collects releases from any number of RSS and Atom feeds, displays them in chronological order, and publishes one combined feed at `/rss.xml`. It can optionally forward new releases to an existing, separately hosted Signal API.
 
 [Deutsche Anleitung](README.de.md)
