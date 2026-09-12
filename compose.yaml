@@ -3,7 +3,7 @@ services:
     build: .
     restart: unless-stopped
     ports:
-      - "${RSSONAR_BIND:-127.0.0.1}:8765:8765"
+      - "${RSSONAR_BIND:-0.0.0.0}:8765:8765"
     environment:
       ADMIN_TOKEN: ${ADMIN_TOKEN:?Set ADMIN_TOKEN in .env}
       PUBLIC_URL: ${PUBLIC_URL:-http://localhost:8765}

@@ -34,6 +34,22 @@ docker compose up -d --build
 
 Open <http://localhost:8765>. The interface asks for the admin token when you first add a feed or trigger a manual refresh. It keeps the token in `sessionStorage` for the current browser tab only. The dashboard and `/rss.xml` are readable without a token. Application data lives in `./data/state.json`; back up this directory if you want to preserve the feed list and history.
 
+For access from another device, open `http://SERVER_IP:8765` and set `PUBLIC_URL=http://SERVER_IP:8765` in `.env` (or use your HTTPS hostname). By default, Docker publishes port `8765` on all server interfaces (`RSSONAR_BIND=0.0.0.0`). You can set `RSSONAR_BIND` to the server's actual LAN IP to restrict it to that interface. Allow the port through the server firewall if you want direct access; prefer an HTTPS reverse proxy for public access.
+
+## Updating an existing server
+
+Run these commands in the cloned repository on the server:
+
+```sh
+cd /path/to/rssonar
+git pull --ff-only
+docker compose up -d --build
+docker compose ps
+docker compose logs --tail=50 rssonar
+```
+
+Before restarting, check `.env`: an existing `RSSONAR_BIND=127.0.0.1` **overrides the new default**. Change it to `RSSONAR_BIND=0.0.0.0` or the server's actual IP, and set `PUBLIC_URL` to the externally reachable URL. Keep your existing `ADMIN_TOKEN` and `./data` directory; `docker compose up -d --build` rebuilds the image and recreates the service as needed without deleting its bind-mounted data. If you deployed from a source archive instead of a Git clone, replace the application files with the new archive while retaining `.env` and `./data`, then run the same Compose command.
+
 Without Docker:
 
 ```sh
@@ -44,7 +60,7 @@ ADMIN_TOKEN='use-a-long-random-secret-here' python3 app.py
 
 RSSonar listens on port `8765` inside its container. Serve it at the root of a dedicated HTTPS hostname such as `https://releases.example.org`. Forward `/`, `/api/`, and `/rss.xml` unchanged to the same backend, and set `PUBLIC_URL=https://releases.example.org` in `.env`.
 
-A reverse proxy running on the same host can reach the default binding at `http://127.0.0.1:8765`. If the proxy itself runs in a container, attach it and RSSonar to the same Docker network and use `http://rssonar:8765` as the upstream. A container's `127.0.0.1` refers to that container, not to the RSSonar host. Change `RSSONAR_BIND` to `0.0.0.0` only when the proxy is on another host and has no private network path; this exposes the port on every host interface.
+A reverse proxy running on the same host can reach RSSonar at `http://127.0.0.1:8765`. If the proxy itself runs in a container, attach it and RSSonar to the same Docker network and use `http://rssonar:8765` as the upstream. A container's `127.0.0.1` refers to that container, not to the RSSonar host. The default `RSSONAR_BIND=0.0.0.0` also publishes the port on the server's other interfaces; restrict access with your firewall or bind to a specific interface in `.env` if appropriate.
 
 - **[Pangolin](https://docs.pangolin.net/manage/resources/public/targets):** Create a public HTTP resource for the hostname and set its target to a host reachable from the Pangolin site on port `8765`.
 - **[Traefik](https://doc.traefik.io/traefik/providers/docker/):** Put both containers on the same Docker network. Route ``Host(`releases.example.org`)`` to the RSSonar service on port `8765`, using your existing HTTPS entry point and certificate resolver.
