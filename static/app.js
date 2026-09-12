@@ -6,10 +6,12 @@ const translations = {
     latestEyebrow: 'LATEST UPDATES', releaseStream: 'Release stream', searchPlaceholder: 'Search releases', projectLabel: 'Project', filterLabel: 'Filter by project', allProjects: 'All projects',
     limitLabel: 'Latest per feed', limitAria: 'Number of latest releases per feed', saveLimit: 'Save', limitSaved: 'Display limit saved.', limitInvalid: 'Choose a whole number from 1 to 500 per feed.', showingCount: 'Showing {shown} of {total} entries',
     manageEyebrow: 'MANAGE SOURCES', yourFeeds: 'Your feeds', sortLabel: 'Sort feeds', sortNameAsc: 'Name A–Z', sortNameDesc: 'Name Z–A', sortNewest: 'Recently added', sortOldest: 'First added',
+    importHeading: 'Import OPML', importDescription: 'Bring your existing subscriptions from an OPML file. Preview the changes before applying them.', importFileLabel: 'OPML file', importModeLabel: 'Import mode', importMerge: 'Add missing feeds', importReplace: 'Replace all feeds', importPreview: 'Preview import', importNoFile: 'Choose an OPML file.', importTooLarge: 'OPML files may be at most 1 MiB.', importReadFailed: 'Could not read the OPML file.', importConfirmMerge: 'Import {file}?\n\nAdd {new} feeds and skip {duplicate_existing} already configured. The file has {found} valid feeds, {invalid} invalid entries, and {duplicate_in_file} duplicate URLs. Existing releases stay.', importConfirmReplace: 'Replace all {existing} configured feeds and delete {existing_releases} stored releases with {found} feeds from {file}?\n\n{invalid} invalid entries and {duplicate_in_file} duplicate URLs will be skipped. This cannot be undone without a backup.', importResultMerge: '{added} feeds added; {skipped} existing feeds skipped.', importResultReplace: '{added} feeds imported. Previous releases removed.',
     addHeading: 'Add a feed', appNameLabel: 'Application name', appNamePlaceholder: 'e.g. Nextcloud', feedUrlLabel: 'RSS or Atom URL', addFeed: 'Add feed', oneFeedHeading: 'One feed for everything.', oneFeedDescription: 'Subscribe to the combined RSS feed in your reader. New entries appear after the next check.', rssOpenLink: 'Copy combined RSS feed link ⧉', signalHeading: 'Signal notifications', signalEnabled: 'Signal is configured. New releases are sent as messages.', signalDisabled: 'Signal is not configured. Set it up in the server configuration.',
     footerTagline: 'Open source in view.', rssSubscribe: 'Copy RSS link ⧉', unlockHeading: 'Unlock management', tokenHelp: 'Enter the admin token from the server configuration.', tokenLabel: 'Admin token', cancel: 'Cancel', continue: 'Continue',
     entrySingular: 'entry', entryPlural: 'entries', noMatches: 'No matching releases', noFeeds: 'No feeds configured yet', trySearch: 'Try another search term or filter.', addFirst: 'Add your first release feed below.', openOriginal: 'Open original release', noFeedsList: 'No feeds yet.', errorPrefix: 'Error', pausedStatus: 'Paused', lastChecked: 'Last checked: {date}', firstCheck: 'First check in progress…', pause: 'Pause', activate: 'Activate', rename: 'Rename', remove: 'Remove', removeConfirm: 'Remove feed “{name}” and its entries?', removed: 'Feed removed.', refreshStarted: 'Refresh started.', feedAdded: 'Feed added. The first check is running.', checkEvery: 'Checks every {minutes} minutes', loadFailed: 'Could not load data.',
-    apiUnauthorized: 'Admin token missing or incorrect', apiInvalidFeed: 'Name and a valid HTTP(S) feed URL are required', apiDuplicate: 'Feed already exists', apiRefreshRunning: 'A refresh is already in progress', apiNotFound: 'Not found', apiFeedNotFound: 'Feed not found', apiNameMissing: 'Name is required', apiBodySize: 'Invalid request size'
+    apiUnauthorized: 'Admin token missing or incorrect', apiInvalidFeed: 'Name and a valid HTTP(S) feed URL are required', apiDuplicate: 'Feed already exists', apiRefreshRunning: 'A refresh is already in progress', apiNotFound: 'Not found', apiFeedNotFound: 'Feed not found', apiNameMissing: 'Name is required', apiBodySize: 'Invalid request size',
+    apiOpmlSelect: 'Choose an OPML file.', apiOpmlTooLarge: 'OPML file exceeds 1 MiB.', apiOpmlDoctype: 'OPML document types and entities are not supported.', apiOpmlInvalidXml: 'Invalid OPML XML.', apiOpmlEncoding: 'Invalid OPML text encoding.', apiOpmlNotFile: 'Not an OPML file (body missing).', apiOpmlNoFeeds: 'OPML contains no valid HTTP(S) feed URLs.', apiOpmlTooMany: 'OPML contains more than 500 feeds.', apiOpmlLimit: 'Import would exceed 500 feeds.', apiOpmlConfirmation: 'Choose an import mode and confirm the import.', apiOpmlRequest: 'Invalid OPML request.', apiOpmlSave: 'Could not save imported feeds.'
   },
   de: {
     homeLabel: 'RSSonar Startseite', monitorLabel: 'Feed-Monitor', themeLabel: 'Design', themeSystem: 'System', themeLight: 'Hell', themeDark: 'Dunkel', languageLabel: 'Sprache', rssOpenLabel: 'Link zum gemeinsamen RSS-Feed kopieren', rssFeedLabel: 'RSS-Link kopieren', feedCopied: 'RSS-Feed-Link kopiert.', copyFeedManually: 'Diesen RSS-Feed-Link kopieren:',
@@ -17,10 +19,12 @@ const translations = {
     latestEyebrow: 'AKTUELLE MELDUNGEN', releaseStream: 'Release-Stream', searchPlaceholder: 'Releases durchsuchen', projectLabel: 'Projekt', filterLabel: 'Nach Projekt filtern', allProjects: 'Alle Projekte',
     limitLabel: 'Neueste pro Feed', limitAria: 'Anzahl der neuesten Releases pro Feed', saveLimit: 'Speichern', limitSaved: 'Anzeigelimit gespeichert.', limitInvalid: 'Bitte eine ganze Zahl von 1 bis 500 pro Feed wählen.', showingCount: '{shown} von {total} Einträgen',
     manageEyebrow: 'QUELLEN VERWALTEN', yourFeeds: 'Deine Feeds', sortLabel: 'Feeds sortieren', sortNameAsc: 'Name A–Z', sortNameDesc: 'Name Z–A', sortNewest: 'Zuletzt hinzugefügt', sortOldest: 'Zuerst hinzugefügt',
+    importHeading: 'OPML importieren', importDescription: 'Übernimm bestehende Abonnements aus einer OPML-Datei. Prüfe die Änderungen vor dem Import.', importFileLabel: 'OPML-Datei', importModeLabel: 'Importmodus', importMerge: 'Fehlende Feeds ergänzen', importReplace: 'Alle Feeds ersetzen', importPreview: 'Import prüfen', importNoFile: 'Bitte eine OPML-Datei wählen.', importTooLarge: 'OPML-Dateien dürfen höchstens 1 MiB groß sein.', importReadFailed: 'OPML-Datei konnte nicht gelesen werden.', importConfirmMerge: '{file} importieren?\n\n{new} Feeds ergänzen und {duplicate_existing} vorhandene überspringen. Die Datei enthält {found} gültige Feeds, {invalid} ungültige Einträge und {duplicate_in_file} doppelte URLs. Bisherige Releases bleiben erhalten.', importConfirmReplace: 'Alle {existing} vorhandenen Feeds und {existing_releases} gespeicherten Releases durch {found} Feeds aus {file} ersetzen?\n\n{invalid} ungültige Einträge und {duplicate_in_file} doppelte URLs werden übersprungen. Ohne Backup ist das nicht rückgängig zu machen.', importResultMerge: '{added} Feeds ergänzt; {skipped} vorhandene übersprungen.', importResultReplace: '{added} Feeds importiert. Bisherige Releases entfernt.',
     addHeading: 'Neuen Feed hinzufügen', appNameLabel: 'Anwendungsname', appNamePlaceholder: 'z. B. Nextcloud', feedUrlLabel: 'RSS- oder Atom-URL', addFeed: 'Feed hinzufügen', oneFeedHeading: 'Ein Feed für alles.', oneFeedDescription: 'Abonniere den gemeinsamen RSS-Feed in deinem Reader. Neue Einträge erscheinen hier nach der nächsten Prüfung.', rssOpenLink: 'Link zum gemeinsamen RSS-Feed kopieren ⧉', signalHeading: 'Signal-Benachrichtigungen', signalEnabled: 'Signal ist eingerichtet. Neue Releases werden als Nachricht versendet.', signalDisabled: 'Signal ist nicht eingerichtet. Die Einrichtung erfolgt über die Server-Konfiguration.',
     footerTagline: 'Open Source im Blick.', rssSubscribe: 'RSS-Link kopieren ⧉', unlockHeading: 'Verwaltung freischalten', tokenHelp: 'Gib den Admin-Token aus der Server-Konfiguration ein.', tokenLabel: 'Admin-Token', cancel: 'Abbrechen', continue: 'Weiter',
     entrySingular: 'Eintrag', entryPlural: 'Einträge', noMatches: 'Keine passenden Releases', noFeeds: 'Noch keine Feeds eingerichtet', trySearch: 'Versuche einen anderen Suchbegriff oder Filter.', addFirst: 'Füge unten deinen ersten Release-Feed hinzu.', openOriginal: 'Originalmeldung öffnen', noFeedsList: 'Noch keine Feeds vorhanden.', errorPrefix: 'Fehler', pausedStatus: 'Pausiert', lastChecked: 'Zuletzt geprüft: {date}', firstCheck: 'Erste Prüfung läuft …', pause: 'Pausieren', activate: 'Aktivieren', rename: 'Umbenennen', remove: 'Entfernen', removeConfirm: 'Feed „{name}“ und seine Einträge entfernen?', removed: 'Feed entfernt.', refreshStarted: 'Aktualisierung gestartet.', feedAdded: 'Feed hinzugefügt. Die erste Prüfung läuft.', checkEvery: 'Prüfung alle {minutes} Minuten', loadFailed: 'Daten konnten nicht geladen werden.',
-    apiUnauthorized: 'Admin-Token fehlt oder ist falsch', apiInvalidFeed: 'Name und gültige HTTP(S)-Feed-URL erforderlich', apiDuplicate: 'Feed ist bereits vorhanden', apiRefreshRunning: 'Aktualisierung läuft bereits', apiNotFound: 'Nicht gefunden', apiFeedNotFound: 'Feed nicht gefunden', apiNameMissing: 'Name fehlt', apiBodySize: 'Ungültige Anfragegröße'
+    apiUnauthorized: 'Admin-Token fehlt oder ist falsch', apiInvalidFeed: 'Name und gültige HTTP(S)-Feed-URL erforderlich', apiDuplicate: 'Feed ist bereits vorhanden', apiRefreshRunning: 'Aktualisierung läuft bereits', apiNotFound: 'Nicht gefunden', apiFeedNotFound: 'Feed nicht gefunden', apiNameMissing: 'Name fehlt', apiBodySize: 'Ungültige Anfragegröße',
+    apiOpmlSelect: 'Bitte eine OPML-Datei wählen.', apiOpmlTooLarge: 'OPML-Datei überschreitet 1 MiB.', apiOpmlDoctype: 'OPML-Dokumenttypen und -Entitäten werden nicht unterstützt.', apiOpmlInvalidXml: 'Ungültiges OPML-XML.', apiOpmlEncoding: 'Ungültige OPML-Textkodierung.', apiOpmlNotFile: 'Keine OPML-Datei (body fehlt).', apiOpmlNoFeeds: 'OPML enthält keine gültigen HTTP(S)-Feed-URLs.', apiOpmlTooMany: 'OPML enthält mehr als 500 Feeds.', apiOpmlLimit: 'Der Import würde 500 Feeds überschreiten.', apiOpmlConfirmation: 'Importmodus wählen und Import bestätigen.', apiOpmlRequest: 'Ungültige OPML-Anfrage.', apiOpmlSave: 'Importierte Feeds konnten nicht gespeichert werden.'
   }
 };
 const apiErrors = {
@@ -32,6 +36,18 @@ const apiErrors = {
   'Feed not found': 'apiFeedNotFound',
   'Name is required': 'apiNameMissing',
   'Invalid request size': 'apiBodySize',
+  'Select an OPML file': 'apiOpmlSelect',
+  'OPML file exceeds 1 MiB': 'apiOpmlTooLarge',
+  'OPML document types and entities are not supported': 'apiOpmlDoctype',
+  'Invalid OPML XML': 'apiOpmlInvalidXml',
+  'Invalid OPML text encoding': 'apiOpmlEncoding',
+  'Not an OPML file (body missing)': 'apiOpmlNotFile',
+  'OPML contains no valid HTTP(S) feed URLs': 'apiOpmlNoFeeds',
+  'OPML contains more than 500 feeds': 'apiOpmlTooMany',
+  'Import would exceed 500 feeds': 'apiOpmlLimit',
+  'Choose an import mode and confirm the import': 'apiOpmlConfirmation',
+  'Invalid OPML request': 'apiOpmlRequest',
+  'Could not save imported feeds': 'apiOpmlSave',
   'Admin-Token fehlt oder ist falsch': 'apiUnauthorized',
   'Name und gültige HTTP(S)-Feed-URL erforderlich': 'apiInvalidFeed',
   'Feed ist bereits vorhanden': 'apiDuplicate',
@@ -345,6 +361,28 @@ $('#add-form').addEventListener('submit', event => {
     await load();
     toast(t('feedAdded'));
     setTimeout(load, 3000);
+  });
+});
+$('#opml-form').addEventListener('submit', async event => {
+  event.preventDefault();
+  const file = $('#opml-file').files[0];
+  if (!file) return toast(t('importNoFile'));
+  if (file.size > 1024 * 1024) return toast(t('importTooLarge'));
+  let opml;
+  try { opml = await file.text(); }
+  catch (_) { return toast(t('importReadFailed')); }
+  const mode = $('#opml-mode').value;
+  withAdmin(async () => {
+    const preview = await api('/api/feeds/import/preview', { method: 'POST', body: JSON.stringify({ opml }) });
+    if (!confirm(t(mode === 'replace' ? 'importConfirmReplace' : 'importConfirmMerge',
+                   { ...preview, file: file.name }))) return;
+    const result = await api('/api/feeds/import', {
+      method: 'POST', body: JSON.stringify({ opml, mode, confirmed: true })
+    });
+    $('#opml-form').reset();
+    await load();
+    toast(t(mode === 'replace' ? 'importResultReplace' : 'importResultMerge', result));
+    if (result.added) setTimeout(load, 3000);
   });
 });
 $('#token-form').addEventListener('submit', event => {

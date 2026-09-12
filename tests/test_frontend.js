@@ -22,6 +22,9 @@ assert.deepEqual(Array.from(takeLatestPerFeed(releases, 1), x => x.title), ['b3'
 const html = fs.readFileSync(path.join(__dirname, '../static/index.html'), 'utf8');
 assert.doesNotMatch(html, /href="\/rss\.xml"/);
 assert.equal((html.match(/class="[^"]*copy-rss-link/g) || []).length, 3);
+assert.match(html, /id="opml-form"/);
+assert.match(html, /value="merge"/);
+assert.match(html, /value="replace"/);
 
 const urlStart = source.indexOf('function publicFeedUrl()');
 const urlEnd = source.indexOf('\nfunction applyTheme()', urlStart);
@@ -57,5 +60,42 @@ const { publicFeedUrl, copyFeedUrl } = vm.runInNewContext(
   };
   await copyFeedUrl();
   assert.equal(messages.at(-1), 'feedCopied');
-  console.log('Release limits and RSS clipboard actions pass.');
+  const importStart = source.indexOf("$('#opml-form').addEventListener(");
+  const importEnd = source.indexOf("\n$('#token-form')", importStart);
+  assert.ok(importStart >= 0 && importEnd > importStart, 'OPML form handler is present');
+  const calls = [];
+  let handler;
+  let pending;
+  let approved = false;
+  const form = { addEventListener: (event, fn) => { handler = fn; }, reset: () => calls.push('reset') };
+  const fields = {
+    '#opml-form': form,
+    '#opml-file': { files: [{ name: 'subscriptions.opml', size: 100, text: async () => '<opml/>' }] },
+    '#opml-mode': { value: 'replace' },
+  };
+  const context = {
+    $: selector => fields[selector],
+    api: async endpoint => {
+      calls.push(endpoint);
+      return endpoint.endsWith('/preview')
+        ? { found: 2, new: 1, existing: 3, existing_releases: 20, invalid: 0, duplicate_in_file: 0 }
+        : { added: 2, skipped: 0, mode: 'replace' };
+    },
+    withAdmin: action => { pending = action(); },
+    confirm: () => { calls.push('confirm'); return approved; },
+    toast: () => {},
+    t: key => key,
+    load: async () => {},
+    setTimeout: () => {},
+  };
+  vm.runInNewContext(source.slice(importStart, importEnd), context);
+  await handler({ preventDefault() {} });
+  await pending;
+  assert.deepEqual(calls, ['/api/feeds/import/preview', 'confirm']);
+  approved = true;
+  calls.length = 0;
+  await handler({ preventDefault() {} });
+  await pending;
+  assert.deepEqual(calls, ['/api/feeds/import/preview', 'confirm', '/api/feeds/import', 'reset']);
+  console.log('Release limits, RSS clipboard, and OPML confirmation pass.');
 })().catch(error => { console.error(error); process.exitCode = 1; });

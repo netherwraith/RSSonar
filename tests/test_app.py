@@ -1,4 +1,6 @@
 import importlib.util
+import io
+import json
 import os
 import tempfile
 import unittest
@@ -162,6 +164,102 @@ class RSSonarTests(unittest.TestCase):
                           return_value=Response(b"x" * (self.app.MAX_FEED_BYTES + 1))):
             with self.assertRaisesRegex(ValueError, "Feed exceeds 10 MiB"):
                 self.app.fetch_feed("https://example.org/large.rss")
+
+    def test_opml_nested_preview_and_merge_preserve_existing_releases(self):
+        self.app.state["feeds"].append(self.feed)
+        self.app.state["releases"].append({"feed_id": self.feed["id"], "title": "Existing release"})
+        opml = '''<?xml version="1.0"?><opml version="2.0"><head><title>Subscriptions</title></head>
+        <body><outline text="Projects"><outline text="Existing" xmlUrl="https://example.org/feed.xml"/>
+        <outline title="Garage" xmlUrl="https://git.deuxfleurs.fr/Deuxfleurs/garage/releases"/>
+        <outline text="Duplicate" xmlUrl="https://git.deuxfleurs.fr/Deuxfleurs/garage/releases.rss"/>
+        <outline text="Invalid" xmlUrl="javascript:alert(1)"/></outline></body></opml>'''
+        handler = object.__new__(self.app.Handler)
+        handler.authorized = lambda: True
+        handler.body = lambda max_bytes=10000: {"opml": opml, "mode": "merge", "confirmed": True}
+        responses = []
+        handler.reply = lambda status, data: responses.append((status, data))
+        handler.path = "/api/feeds/import/preview"
+        handler.do_POST()
+        self.assertEqual(responses[-1], (200, {"found": 2, "new": 1, "existing": 1,
+                                             "existing_releases": 1, "duplicate_existing": 1,
+                                             "invalid": 1, "duplicate_in_file": 1}))
+        self.assertEqual(len(self.app.state["feeds"]), 1)
+        handler.path = "/api/feeds/import"
+        with patch.object(self.app.threading, "Thread"):
+            handler.do_POST()
+        self.assertEqual(responses[-1], (200, {"added": 1, "skipped": 1, "mode": "merge"}))
+        self.assertEqual(len(self.app.state["feeds"]), 2)
+        self.assertEqual(self.app.state["feeds"][0], self.feed)
+        self.assertEqual(self.app.state["feeds"][1]["url"],
+                         "https://git.deuxfleurs.fr/Deuxfleurs/garage/releases.rss")
+        self.assertEqual(len(self.app.state["releases"]), 1)
+        self.assertEqual(len(self.app.load()["feeds"]), 2)
+
+    def test_opml_replace_needs_explicit_confirmation_and_clears_history(self):
+        self.app.state["feeds"].append(self.feed)
+        self.app.state["releases"].append({"feed_id": self.feed["id"], "title": "Old"})
+        opml = '<opml version="2.0"><body><outline text="New" xmlUrl="https://example.net/releases.rss"/></body></opml>'
+        body = {"opml": opml, "mode": "replace", "confirmed": False}
+        handler = object.__new__(self.app.Handler)
+        handler.path = "/api/feeds/import"
+        handler.authorized = lambda: True
+        handler.body = lambda max_bytes=10000: body
+        responses = []
+        handler.reply = lambda status, data: responses.append((status, data))
+        handler.do_POST()
+        self.assertEqual(responses[-1][0], 400)
+        self.assertEqual(self.app.state["feeds"], [self.feed])
+        self.assertEqual(len(self.app.state["releases"]), 1)
+        body["confirmed"] = True
+        with patch.object(self.app.threading, "Thread"):
+            handler.do_POST()
+        self.assertEqual(responses[-1][0], 200)
+        self.assertEqual([feed["name"] for feed in self.app.state["feeds"]], ["New"])
+        self.assertEqual(self.app.state["releases"], [])
+        self.assertEqual(len(self.app.load()["feeds"]), 1)
+
+    def test_opml_validation_rejects_malformed_or_unsafe_documents(self):
+        samples = ["<opml>", "<rss><channel/></rss>",
+                   '<!DOCTYPE opml [<!ENTITY x "bad">]><opml><body/></opml>',
+                   '<opml><body><outline xmlUrl="javascript:alert(1)"/></body></opml>',
+                   " " * (self.app.MAX_OPML_BYTES + 1)]
+        for sample in samples:
+            with self.subTest(sample=sample[:40]), self.assertRaises(ValueError):
+                self.app.parse_opml(sample)
+
+    def test_opml_upload_allows_larger_body_but_requires_admin_token(self):
+        document = '<opml><body><outline text="App" xmlUrl="https://example.org/feed.xml"/></body></opml>'
+        payload = json.dumps({"opml": document + " " * 11000}).encode()
+        handler = object.__new__(self.app.Handler)
+        handler.headers = {"Content-Length": str(len(payload))}
+        handler.rfile = io.BytesIO(payload)
+        with self.assertRaisesRegex(ValueError, "Invalid request size"):
+            handler.body()
+        self.assertIn("opml", handler.body(self.app.MAX_OPML_BYTES * 2 + 10000))
+        handler.path = "/api/feeds/import"
+        handler.authorized = lambda: False
+        responses = []
+        handler.reply = lambda status, data: responses.append((status, data))
+        handler.do_POST()
+        self.assertEqual(responses[-1][0], 401)
+        self.assertEqual(self.app.state["feeds"], [])
+
+    def test_opml_replace_rolls_back_when_storage_fails(self):
+        self.app.state["feeds"].append(self.feed)
+        self.app.state["releases"].append({"feed_id": self.feed["id"], "title": "Old"})
+        handler = object.__new__(self.app.Handler)
+        handler.path = "/api/feeds/import"
+        handler.authorized = lambda: True
+        handler.body = lambda max_bytes=10000: {
+            "opml": '<opml><body><outline text="New" xmlUrl="https://example.net/feed.rss"/></body></opml>',
+            "mode": "replace", "confirmed": True}
+        responses = []
+        handler.reply = lambda status, data: responses.append((status, data))
+        with patch.object(self.app, "save", side_effect=OSError("disk full")):
+            handler.do_POST()
+        self.assertEqual(responses[-1], (500, {"error": "Could not save imported feeds"}))
+        self.assertEqual(self.app.state["feeds"], [self.feed])
+        self.assertEqual(len(self.app.state["releases"]), 1)
 
 
 if __name__ == "__main__":

@@ -9,6 +9,7 @@
 ## Funktionen
 
 - Feeds über die Webseite hinzufügen, umbenennen, pausieren und entfernen. Sortierung nach Name (A–Z als Standard oder Z–A) oder Hinzufügung.
+- Vorhandene Abonnements aus einer `.opml`-Datei mit Vorschau und ausdrücklicher Bestätigung ergänzen oder ersetzen.
 - Automatische Prüfung alle 15 Minuten (konfigurierbar) sowie manuelle Aktualisierung.
 - Releases nach Anwendung filtern und durchsuchen. Die Anzahl der neuesten angezeigten Treffer ist **pro Feed** wählbar und speicherbar (1–500; Standard 20). Bei 5 und 14 Feeds erscheinen bis zu 70 Releases in einem chronologischen Stream. Jeder Eintrag führt zur Original-URL des Feeds, etwa zu GitHub oder Codeberg.
 - Zwischen hellem, dunklem und System-Design sowie Englisch (Standard) und Deutsch umschalten. Anzeigeeinstellungen werden im Browser gespeichert.
@@ -79,6 +80,15 @@ Die öffentliche Webseite und `/rss.xml` sind ohne Admin-Token lesbar. Falls der
 ## Feed-URLs
 
 Auf GitHub lautet die Release-Feed-URL `https://github.com/OWNER/REPO/releases.atom`. Forgejo verwendet `https://HOST/OWNER/REPO/releases.rss`, etwa `https://git.deuxfleurs.fr/Deuxfleurs/garage/releases.rss` für Garage oder `https://codeberg.org/superseriousbusiness/gotosocial/releases.rss` für GoToSocial. Eine `/releases`-Seite liefert HTML; RSSonar korrigiert solche Repository-Release-Seiten automatisch zu `.rss` (auf GitHub zu `.atom`), auch bei bereits gespeicherten URLs nach dem nächsten erfolgreichen Abruf. RSSonar nutzt den Original-Link aus jedem Feed-Eintrag als Ziel. Der erste erfolgreiche Abruf übernimmt bestehende Einträge **ohne Signal-Meldungen**. Erst danach neu auftauchende Einträge lösen Benachrichtigungen aus.
+
+## OPML importieren
+
+Unter **Quellen verwalten → OPML importieren** eine exportierte `.opml`-Datei und den Importmodus wählen, dann auf **Import prüfen** klicken. RSSonar liest auch Feeds in verschachtelten OPML-Ordnern und zeigt die Anzahl gültiger, bereits vorhandener und doppelter Einträge. Der Admin-Token ist erforderlich; vor der Bestätigung der Vorschau werden keine Daten geändert.
+
+- **Fehlende Feeds ergänzen** behält alle vorhandenen Feeds und die Release-Historie. Bereits vorhandene Feed-URLs werden übersprungen; die Namen stammen aus `title` oder `text` der OPML-Datei.
+- **Alle Feeds ersetzen** ersetzt die komplette Feed-Liste und **löscht die gespeicherte Release-Historie**, einschließlich ausstehender Benachrichtigungen. Die Bestätigung nennt beide Anzahlen. Falls eine Rückkehr nötig sein könnte, vorher `./data` sichern.
+
+Nur HTTP(S)-Feed-URLs werden übernommen; ungültige Einträge werden gezählt und übersprungen. Leere oder fehlerhafte OPML-Dateien werden ohne Datenänderung abgewiesen. Die Datei darf höchstens 1 MiB und 500 eindeutige Feeds enthalten; nach einer Ergänzung dürfen insgesamt höchstens 500 Feeds eingerichtet sein. Der OPML-Inhalt wird nur für die Anfrage verarbeitet und nicht gespeichert. Neue Feeds werden im Hintergrund geprüft; OPML garantiert nicht, dass eine URL tatsächlich Releases enthält. Nach dem Import daher den Feed-Status prüfen. Falls der Reverse Proxy den Upload ablehnt, für die Import-API Requests bis 2 MiB zulassen.
 
 ## Signal einrichten (optional)
 

@@ -47,6 +47,15 @@
     <section class="manage" id="feeds">
       <div class="section-heading"><div><p class="eyebrow" data-i18n="manageEyebrow">MANAGE SOURCES</p><h2 data-i18n="yourFeeds">Your feeds</h2></div><label class="sort-control"><span data-i18n="sortLabel">Sort feeds</span><select id="feed-sort" aria-label="Sort feeds" data-i18n-aria="sortLabel"><option value="name-asc" data-i18n="sortNameAsc">Name A–Z</option><option value="name-desc" data-i18n="sortNameDesc">Name Z–A</option><option value="added-newest" data-i18n="sortNewest">Recently added</option><option value="added-oldest" data-i18n="sortOldest">First added</option></select></label></div>
       <div class="manage-grid"><div class="manage-main"><div id="feed-list" class="feed-list"></div><div class="add-box"><h3 data-i18n="addHeading">Add a feed</h3><form id="add-form"><label><span data-i18n="appNameLabel">Application name</span><input id="feed-name" name="name" required maxlength="80" placeholder="e.g. Nextcloud" data-i18n-placeholder="appNamePlaceholder"></label><label><span data-i18n="feedUrlLabel">RSS or Atom URL</span><input id="feed-url" name="url" type="url" required placeholder="https://github.com/…/releases.atom"></label><button class="primary-button" type="submit"><span data-i18n="addFeed">Add feed</span><span aria-hidden="true">＋</span></button></form></div></div><aside class="info-panel"><div class="info-icon">⧉</div><h3 data-i18n="oneFeedHeading">One feed for everything.</h3><p data-i18n="oneFeedDescription">Subscribe to the combined RSS feed in your reader. New entries appear after the next check.</p><button class="copy-rss-link" type="button" data-i18n="rssOpenLink">Copy combined RSS feed link ⧉</button><div class="aside-rule"></div><h4 data-i18n="signalHeading">Signal notifications</h4><p id="signal-status">Signal is not configured. Set it up in the server configuration.</p></aside></div>
+      <div class="import-box">
+        <h3 data-i18n="importHeading">Import OPML</h3>
+        <p data-i18n="importDescription">Import feed subscriptions from an OPML file. Preview changes before applying them.</p>
+        <form id="opml-form">
+          <label><span data-i18n="importFileLabel">OPML file</span><input id="opml-file" type="file" accept=".opml,.xml,text/xml,application/xml" required></label>
+          <label><span data-i18n="importModeLabel">Import mode</span><select id="opml-mode"><option value="merge" data-i18n="importMerge">Add missing feeds</option><option value="replace" data-i18n="importReplace">Replace all feeds</option></select></label>
+          <button class="primary-button" type="submit" data-i18n="importPreview">Preview import</button>
+        </form>
+      </div>
     </section>
   </main>
   <footer><span>RSSONAR</span><span data-i18n="footerTagline">Open source in view.</span><button class="copy-rss-link" type="button" data-i18n="rssSubscribe">Copy RSS link ⧉</button></footer>

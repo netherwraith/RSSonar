@@ -31,6 +31,8 @@ SIGNAL_RECIPIENTS = [x.strip() for x in os.environ.get("SIGNAL_RECIPIENTS", "").
 PUBLIC_URL = os.environ.get("PUBLIC_URL", "").rstrip("/")
 PUBLIC_FEED_URL = os.environ.get("PUBLIC_FEED_URL", "").strip()
 MAX_FEED_BYTES = 10 * 1024 * 1024
+MAX_OPML_BYTES = 1024 * 1024
+MAX_IMPORTED_FEEDS = 500
 lock = threading.RLock()
 poll_lock = threading.Lock()
 
@@ -119,6 +121,65 @@ def normalize_feed_url(raw):
         return urllib.parse.urlunsplit((url.scheme, url.netloc,
                                       url.path.rstrip("/") + extension, "", ""))
     return raw
+
+
+def parse_opml(document):
+    """Read nested OPML outlines without fetching any of their feed URLs."""
+    if not isinstance(document, str) or not document.strip():
+        raise ValueError("Select an OPML file")
+    try:
+        raw = document.encode("utf-8")
+    except UnicodeError as exc:
+        raise ValueError("Invalid OPML text encoding") from exc
+    if len(raw) > MAX_OPML_BYTES:
+        raise ValueError("OPML file exceeds 1 MiB")
+    if re.search(rb"<!\s*(?:DOCTYPE|ENTITY)\b", raw, re.IGNORECASE):
+        raise ValueError("OPML document types and entities are not supported")
+    try:
+        root = ET.fromstring(raw)
+    except ET.ParseError as exc:
+        raise ValueError("Invalid OPML XML") from exc
+    if tag(root) != "opml" or child(root, "body") is None:
+        raise ValueError("Not an OPML file (body missing)")
+    found = []
+    seen = set()
+    invalid = duplicates = 0
+    for outline in child(root, "body").iter():
+        if tag(outline) != "outline":
+            continue
+        url = next((v.strip() for k, v in outline.attrib.items() if k.lower() == "xmlurl"), "")
+        if not url:
+            continue  # Folder outlines do not represent feeds.
+        if len(url) > 1000 or not valid_url(url):
+            invalid += 1
+            continue
+        url = normalize_feed_url(url)
+        if url in seen:
+            duplicates += 1
+            continue
+        name = (outline.attrib.get("title") or outline.attrib.get("text") or
+                urllib.parse.urlsplit(url).hostname).strip()[:80]
+        found.append({"name": name, "url": url})
+        seen.add(url)
+        if len(found) > MAX_IMPORTED_FEEDS:
+            raise ValueError("OPML contains more than 500 feeds")
+    if not found:
+        raise ValueError("OPML contains no valid HTTP(S) feed URLs")
+    return found, invalid, duplicates
+
+
+def import_preview(feeds, invalid, duplicates):
+    existing = {normalize_feed_url(feed["url"]) for feed in state["feeds"]}
+    return {"found": len(feeds), "new": sum(feed["url"] not in existing for feed in feeds),
+            "existing": len(state["feeds"]), "existing_releases": len(state["releases"]),
+            "duplicate_existing": sum(feed["url"] in existing for feed in feeds),
+            "invalid": invalid, "duplicate_in_file": duplicates}
+
+
+def imported_feed(item):
+    return {"id": secrets.token_hex(8), "name": item["name"], "url": item["url"],
+            "created": datetime.now(timezone.utc).isoformat(),
+            "enabled": True, "checked": "", "error": ""}
 
 
 def parse_feed(raw, feed):
@@ -279,9 +340,9 @@ class Handler(BaseHTTPRequestHandler):
     def authorized(self):
         return secrets.compare_digest(self.headers.get("X-Admin-Token", ""), TOKEN)
 
-    def body(self):
+    def body(self, max_bytes=10000):
         size = int(self.headers.get("Content-Length", "0"))
-        if size < 1 or size > 10000:
+        if size < 1 or size > max_bytes:
             raise ValueError("Invalid request size")
         return json.loads(self.rfile.read(size))
 
@@ -307,6 +368,41 @@ class Handler(BaseHTTPRequestHandler):
             return self.reply(401, {"error": "Admin token missing or incorrect"})
         path = urllib.parse.urlsplit(self.path).path
         try:
+            if path in ("/api/feeds/import/preview", "/api/feeds/import"):
+                body = self.body(MAX_OPML_BYTES * 2 + 10000)
+                if not isinstance(body, dict):
+                    raise ValueError("Invalid OPML request")
+                feeds, invalid, duplicates = parse_opml(body.get("opml"))
+                with lock:
+                    preview = import_preview(feeds, invalid, duplicates)
+                    if path.endswith("/preview"):
+                        return self.reply(200, preview)
+                    mode = body.get("mode")
+                    if mode not in ("merge", "replace") or body.get("confirmed") is not True:
+                        raise ValueError("Choose an import mode and confirm the import")
+                    original_feeds, original_releases = state["feeds"], state["releases"]
+                    if mode == "replace":
+                        state["feeds"] = [imported_feed(item) for item in feeds]
+                        state["releases"] = []
+                        added = len(feeds)
+                    else:
+                        existing = {normalize_feed_url(feed["url"]) for feed in state["feeds"]}
+                        additions = [imported_feed(item) for item in feeds if item["url"] not in existing]
+                        if len(state["feeds"]) + len(additions) > MAX_IMPORTED_FEEDS:
+                            raise ValueError("Import would exceed 500 feeds")
+                        if additions:
+                            state["feeds"] = state["feeds"] + additions
+                        added = len(additions)
+                    if added:
+                        try:
+                            save()
+                        except OSError:
+                            state["feeds"], state["releases"] = original_feeds, original_releases
+                            return self.reply(500, {"error": "Could not save imported feeds"})
+                if added:
+                    threading.Thread(target=poll, daemon=True).start()
+                return self.reply(200, {"added": added, "skipped": preview["duplicate_existing"],
+                                        "mode": mode})
             if path == "/api/feeds":
                 body = self.body()
                 name = str(body.get("name", "")).strip()[:80]
