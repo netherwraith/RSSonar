@@ -78,7 +78,7 @@ Die öffentliche Webseite und `/rss.xml` sind ohne Admin-Token lesbar. Falls der
 
 ## Feed-URLs
 
-Auf GitHub ist häufig `https://github.com/OWNER/REPO/releases.atom` geeignet. Bei Codeberg/Forgejo lautet die Release-Feed-URL `https://codeberg.org/OWNER/REPO/releases.rss`; die Adresse mit nur `/releases` liefert HTML statt eines Feeds. RSSonar korrigiert Codeberg-Release-Seiten automatisch zu `.rss`, auch bei bereits gespeicherten Feeds nach dem nächsten erfolgreichen Abruf. Bei anderen Forgejo-Instanzen die tatsächliche `.rss`-Feed-URL eintragen. RSSonar nutzt den Link aus jedem Feed-Eintrag als Ziel; es erfindet keine Release-URL. Der erste erfolgreiche Abruf übernimmt bestehende Einträge **ohne Signal-Meldungen**. Erst danach neu auftauchende Einträge lösen Benachrichtigungen aus.
+Auf GitHub lautet die Release-Feed-URL `https://github.com/OWNER/REPO/releases.atom`. Forgejo verwendet `https://HOST/OWNER/REPO/releases.rss`, etwa `https://git.deuxfleurs.fr/Deuxfleurs/garage/releases.rss` für Garage oder `https://codeberg.org/superseriousbusiness/gotosocial/releases.rss` für GoToSocial. Eine `/releases`-Seite liefert HTML; RSSonar korrigiert solche Repository-Release-Seiten automatisch zu `.rss` (auf GitHub zu `.atom`), auch bei bereits gespeicherten URLs nach dem nächsten erfolgreichen Abruf. RSSonar nutzt den Original-Link aus jedem Feed-Eintrag als Ziel. Der erste erfolgreiche Abruf übernimmt bestehende Einträge **ohne Signal-Meldungen**. Erst danach neu auftauchende Einträge lösen Benachrichtigungen aus.
 
 ## Signal einrichten (optional)
 
@@ -94,9 +94,9 @@ Mehrere Empfänger können kommasepariert angegeben werden. Der externe Dienst m
 
 ## Betrieb und Grenzen
 
-- RSSonar prüft die Feeds innerhalb des konfigurierten Intervalls, nicht sekundengenau beim Release.
+- RSSonar prüft die Feeds innerhalb des konfigurierten Intervalls, nicht sekundengenau beim Release. Für jeden Abruf gilt ein Netzwerk-Timeout von 30 Sekunden.
 - Der Serverprozess muss laufen. Reines statisches HTML oder klassischer PHP-Webspace ohne Hintergrundjob kann die regelmäßige Prüfung und Signal-Zustellung nicht leisten.
-- Feeds dürfen höchstens 2 MB groß sein; je Feed werden höchstens die ersten 100 Einträge eines Abrufs verarbeitet.
+- Feeds dürfen höchstens 10 MiB groß sein; je Feed werden höchstens die ersten 100 Einträge eines Abrufs verarbeitet. Das reicht auch für umfangreiche Release-Notizen wie im Codeberg-Feed von GoToSocial.
 - Die Admin-API akzeptiert nur Anfragen mit `X-Admin-Token`. Wer einen öffentlich erreichbaren Server betreibt, sollte zusätzlich HTTPS und üblichen Zugriffsschutz für die Verwaltung vorsehen. Admins können Feed-URLs konfigurieren; nur vertrauenswürdige Admins sollten den Token erhalten.
 - Die JSON-Datei ist für eine einzelne Serverinstanz gedacht. Mehrere parallel laufende Instanzen benötigen eine gemeinsame Datenbank und koordinierte Jobs.
 

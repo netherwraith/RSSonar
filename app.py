@@ -30,6 +30,7 @@ SIGNAL_NUMBER = os.environ.get("SIGNAL_NUMBER", "")
 SIGNAL_RECIPIENTS = [x.strip() for x in os.environ.get("SIGNAL_RECIPIENTS", "").split(",") if x.strip()]
 PUBLIC_URL = os.environ.get("PUBLIC_URL", "").rstrip("/")
 PUBLIC_FEED_URL = os.environ.get("PUBLIC_FEED_URL", "").strip()
+MAX_FEED_BYTES = 10 * 1024 * 1024
 lock = threading.RLock()
 poll_lock = threading.Lock()
 
@@ -110,12 +111,13 @@ def valid_url(raw):
 
 
 def normalize_feed_url(raw):
-    """Turn Codeberg repository release pages into their actual RSS URL."""
+    """Turn repository release pages into their RSS or Atom feed URL."""
     url = urllib.parse.urlsplit(raw)
-    if (url.hostname == "codeberg.org" and not url.query and not url.fragment
+    if (not url.query and not url.fragment
             and re.fullmatch(r"/[^/]+/[^/]+/releases/?", url.path)):
+        extension = ".atom" if url.hostname == "github.com" else ".rss"
         return urllib.parse.urlunsplit((url.scheme, url.netloc,
-                                      url.path.rstrip("/") + ".rss", "", ""))
+                                      url.path.rstrip("/") + extension, "", ""))
     return raw
 
 
@@ -152,14 +154,14 @@ def parse_feed(raw, feed):
 def fetch_feed(url):
     request = urllib.request.Request(url, headers={"User-Agent": "RSSonar/1.0 (+RSS reader)",
                                                    "Accept": "application/atom+xml, application/rss+xml, application/xml, text/xml"})
-    with urllib.request.urlopen(request, timeout=15) as response:
+    with urllib.request.urlopen(request, timeout=30) as response:
         if response.status != 200:
             raise ValueError("HTTP %s" % response.status)
-        raw = response.read(2_000_001)
-        if len(raw) > 2_000_000:
-            raise ValueError("Feed exceeds 2 MB")
+        raw = response.read(MAX_FEED_BYTES + 1)
+        if len(raw) > MAX_FEED_BYTES:
+            raise ValueError("Feed exceeds 10 MiB")
         if response.headers.get_content_type() == "text/html":
-            hint = (" Use the /releases.rss URL for Forgejo/Codeberg repositories."
+            hint = (" Use /releases.atom for GitHub or /releases.rss for Forgejo repositories."
                     if urllib.parse.urlsplit(url).path.rstrip("/").endswith("/releases") else "")
             raise ValueError("This URL is a webpage, not an RSS/Atom feed." + hint)
         return raw

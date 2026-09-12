@@ -88,7 +88,7 @@ The public dashboard and `/rss.xml` do not require the admin token. If you put a
 
 ## Feed URLs
 
-A GitHub release feed often has the form `https://github.com/OWNER/REPO/releases.atom`. A Codeberg/Forgejo release feed uses `https://codeberg.org/OWNER/REPO/releases.rss`; the `/releases` URL itself is an HTML page, not a feed. RSSonar converts Codeberg release page URLs to `.rss` automatically, including previously saved feeds on their next successful check. For other Forgejo hosts, enter the actual `.rss` feed URL. RSSonar follows the link supplied by each feed entry; it does not fabricate a release URL. The first successful fetch imports existing entries **without Signal notifications**. Only entries found on later checks can trigger notifications.
+A GitHub release feed has the form `https://github.com/OWNER/REPO/releases.atom`. Forgejo release feeds use `https://HOST/OWNER/REPO/releases.rss`, for example `https://git.deuxfleurs.fr/Deuxfleurs/garage/releases.rss` for Garage or `https://codeberg.org/superseriousbusiness/gotosocial/releases.rss` for GoToSocial. A `/releases` page is HTML; RSSonar converts such repository release pages to `.rss` (or `.atom` on GitHub), including previously saved URLs on their next successful check. RSSonar follows each entry's original link rather than fabricating a release URL. The first successful fetch imports existing entries **without Signal notifications**. Only entries found on later checks can trigger notifications.
 
 ## Existing Signal API (optional)
 
@@ -104,9 +104,9 @@ Separate multiple recipients with commas. The external API must be reachable fro
 
 ## Operations and limitations
 
-- Feeds are checked within the configured interval, not instantly when a release is published.
+- Feeds are checked within the configured interval, not instantly when a release is published. Each fetch has a 30-second network timeout.
 - The server process must keep running. Static HTML hosting or traditional PHP hosting without a background job cannot provide scheduled checks and Signal delivery.
-- A feed may be at most 2 MB; RSSonar processes up to the first 100 entries on each fetch.
+- A feed may be at most 10 MiB; RSSonar processes up to the first 100 entries on each fetch. This accommodates large release notes such as GoToSocial's Codeberg feed.
 - The admin API requires `X-Admin-Token`. For a public installation, use HTTPS and appropriate access controls for administration. Only trusted admins should receive the token because they can configure feed URLs.
 - The JSON state file is designed for a single application instance. Multiple replicas would need a shared database and coordinated polling.
 

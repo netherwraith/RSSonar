@@ -95,13 +95,17 @@ class RSSonarTests(unittest.TestCase):
             handler.do_GET()
         self.assertEqual(responses[-1][1]["public_feed_url"], "")
 
-    def test_codeberg_release_page_is_normalized_on_add_and_poll(self):
+    def test_forgejo_release_pages_are_normalized_on_add_and_poll(self):
         page = "https://codeberg.org/forgejo/forgejo/releases"
         feed_url = page + ".rss"
         self.assertEqual(self.app.normalize_feed_url(page), feed_url)
         self.assertEqual(self.app.normalize_feed_url(page + "/"), feed_url)
+        self.assertEqual(self.app.normalize_feed_url("https://git.deuxfleurs.fr/Deuxfleurs/garage/releases"),
+                         "https://git.deuxfleurs.fr/Deuxfleurs/garage/releases.rss")
         self.assertEqual(self.app.normalize_feed_url("https://github.com/o/r/releases"),
-                         "https://github.com/o/r/releases")
+                         "https://github.com/o/r/releases.atom")
+        self.assertEqual(self.app.normalize_feed_url("https://codeberg.org/o/r/releases.rss"),
+                         "https://codeberg.org/o/r/releases.rss")
         self.feed["url"] = page
         self.app.state["feeds"].append(self.feed)
         rss = b'<rss><channel><item><title>v1</title><link>https://codeberg.org/forgejo/forgejo/releases/tag/v1</link></item></channel></rss>'
@@ -130,6 +134,34 @@ class RSSonarTests(unittest.TestCase):
         with patch.object(self.app.urllib.request, "urlopen", return_value=Response()):
             with self.assertRaisesRegex(ValueError, r"webpage.*releases\.rss"):
                 self.app.fetch_feed("https://forgejo.example/o/r/releases")
+
+    def test_large_rss_feed_is_accepted_but_still_bounded(self):
+        class Response:
+            status = 200
+            headers = Message()
+            headers["Content-Type"] = "application/rss+xml"
+
+            def __init__(self, data):
+                self.data = data
+
+            def __enter__(self):
+                return self
+
+            def __exit__(self, *args):
+                pass
+
+            def read(self, size):
+                return self.data[:size]
+
+        feed = b"<rss><channel></channel></rss>" + b" " * 2_600_000
+        with patch.object(self.app.urllib.request, "urlopen", return_value=Response(feed)):
+            raw = self.app.fetch_feed("https://codeberg.org/o/r/releases.rss")
+        self.assertEqual(len(raw), len(feed))
+        self.assertEqual(self.app.parse_feed(raw, self.feed), [])
+        with patch.object(self.app.urllib.request, "urlopen",
+                          return_value=Response(b"x" * (self.app.MAX_FEED_BYTES + 1))):
+            with self.assertRaisesRegex(ValueError, "Feed exceeds 10 MiB"):
+                self.app.fetch_feed("https://example.org/large.rss")
 
 
 if __name__ == "__main__":
