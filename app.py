@@ -108,6 +108,16 @@ def valid_url(raw):
         return False
 
 
+def normalize_feed_url(raw):
+    """Turn Codeberg repository release pages into their actual RSS URL."""
+    url = urllib.parse.urlsplit(raw)
+    if (url.hostname == "codeberg.org" and not url.query and not url.fragment
+            and re.fullmatch(r"/[^/]+/[^/]+/releases/?", url.path)):
+        return urllib.parse.urlunsplit((url.scheme, url.netloc,
+                                      url.path.rstrip("/") + ".rss", "", ""))
+    return raw
+
+
 def parse_feed(raw, feed):
     root = ET.fromstring(raw)
     kind = tag(root)
@@ -147,6 +157,10 @@ def fetch_feed(url):
         raw = response.read(2_000_001)
         if len(raw) > 2_000_000:
             raise ValueError("Feed exceeds 2 MB")
+        if response.headers.get_content_type() == "text/html":
+            hint = (" Use the /releases.rss URL for Forgejo/Codeberg repositories."
+                    if urllib.parse.urlsplit(url).path.rstrip("/").endswith("/releases") else "")
+            raise ValueError("This URL is a webpage, not an RSS/Atom feed." + hint)
         return raw
 
 
@@ -172,7 +186,8 @@ def poll():
             feeds = [dict(f) for f in state["feeds"] if f.get("enabled", True)]
         for feed in feeds:
             try:
-                parsed = parse_feed(fetch_feed(feed["url"]), feed)
+                feed_url = normalize_feed_url(feed["url"])
+                parsed = parse_feed(fetch_feed(feed_url), feed)
                 with lock:
                     current = next((f for f in state["feeds"] if f["id"] == feed["id"]), None)
                     if current is None or not current.get("enabled", True):
@@ -185,6 +200,7 @@ def poll():
                             state["releases"].append(release)
                             existing.add(release["id"])
                     current["checked"] = datetime.now(timezone.utc).isoformat()
+                    current["url"] = feed_url
                     current["error"] = ""
                     state["releases"].sort(key=lambda r: r["published"], reverse=True)
                     save()
@@ -230,6 +246,18 @@ def rss_xml():
     return ("".join(parts) + "</channel></rss>").encode()
 
 
+def dashboard_releases():
+    """Keep up to 500 entries per feed so one busy feed cannot hide another."""
+    counts = {}
+    result = []
+    for release in state["releases"]:
+        feed_id = release["feed_id"]
+        if counts.get(feed_id, 0) < 500:
+            result.append(release)
+            counts[feed_id] = counts.get(feed_id, 0) + 1
+    return result
+
+
 class Handler(BaseHTTPRequestHandler):
     def reply(self, status, data, content_type="application/json; charset=utf-8"):
         if isinstance(data, (dict, list)):
@@ -262,7 +290,8 @@ class Handler(BaseHTTPRequestHandler):
             return self.reply(200, (ROOT / "static" / name).read_bytes(), content_type + "; charset=utf-8")
         if path == "/api/state":
             with lock:
-                return self.reply(200, {"feeds": state["feeds"], "releases": state["releases"][:500],
+                return self.reply(200, {"feeds": state["feeds"], "releases": dashboard_releases(),
+                                        "release_count": len(state["releases"]),
                                         "signal_enabled": bool(SIGNAL_URL and SIGNAL_NUMBER and SIGNAL_RECIPIENTS),
                                         "interval_minutes": INTERVAL // 60})
         if path == "/rss.xml":
@@ -280,8 +309,9 @@ class Handler(BaseHTTPRequestHandler):
                 url = str(body.get("url", "")).strip()
                 if not name or not valid_url(url) or len(url) > 1000:
                     return self.reply(400, {"error": "Name and a valid HTTP(S) feed URL are required"})
+                url = normalize_feed_url(url)
                 with lock:
-                    if any(f["url"] == url for f in state["feeds"]):
+                    if any(normalize_feed_url(f["url"]) == url for f in state["feeds"]):
                         return self.reply(409, {"error": "Feed already exists"})
                     feed = {"id": secrets.token_hex(8), "name": name, "url": url,
                             "created": datetime.now(timezone.utc).isoformat(),

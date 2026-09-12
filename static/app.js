@@ -4,7 +4,7 @@ const translations = {
     homeLabel: 'RSSonar home', monitorLabel: 'Feed monitor', themeLabel: 'Theme', themeSystem: 'System', themeLight: 'Light', themeDark: 'Dark', languageLabel: 'Language', rssOpenLabel: 'Open combined RSS feed', rssFeedLabel: 'RSS feed',
     heroEyebrow: 'YOUR OPEN-SOURCE UPDATE', heroLineOne: 'All the latest.', heroLineTwo: 'One clear view.', heroDescription: 'The latest releases from your RSS and Atom feeds, collected in one place. Go straight to the original announcement on GitHub or Codeberg.', viewReleases: 'View releases', refreshNow: 'Refresh now', overviewLabel: 'OVERVIEW', activeFeeds: 'active feeds', trackedReleases: 'tracked releases',
     latestEyebrow: 'LATEST UPDATES', releaseStream: 'Release stream', searchPlaceholder: 'Search releases', projectLabel: 'Project', filterLabel: 'Filter by project', allProjects: 'All projects',
-    limitLabel: 'Latest', limitAria: 'Number of latest releases', saveLimit: 'Save', limitSaved: 'Display limit saved.', limitInvalid: 'Choose a whole number from 1 to 500.', showingCount: 'Showing {shown} of {total} entries',
+    limitLabel: 'Latest per feed', limitAria: 'Number of latest releases per feed', saveLimit: 'Save', limitSaved: 'Display limit saved.', limitInvalid: 'Choose a whole number from 1 to 500 per feed.', showingCount: 'Showing {shown} of {total} entries',
     manageEyebrow: 'MANAGE SOURCES', yourFeeds: 'Your feeds', sortLabel: 'Sort feeds', sortNameAsc: 'Name A–Z', sortNameDesc: 'Name Z–A', sortNewest: 'Recently added', sortOldest: 'First added',
     addHeading: 'Add a feed', appNameLabel: 'Application name', appNamePlaceholder: 'e.g. Nextcloud', feedUrlLabel: 'RSS or Atom URL', addFeed: 'Add feed', oneFeedHeading: 'One feed for everything.', oneFeedDescription: 'Subscribe to the combined RSS feed in your reader. New entries appear after the next check.', rssOpenLink: 'Open combined RSS feed →', signalHeading: 'Signal notifications', signalEnabled: 'Signal is configured. New releases are sent as messages.', signalDisabled: 'Signal is not configured. Set it up in the server configuration.',
     footerTagline: 'Open source in view.', rssSubscribe: 'Subscribe to RSS ↗', unlockHeading: 'Unlock management', tokenHelp: 'Enter the admin token from the server configuration.', tokenLabel: 'Admin token', cancel: 'Cancel', continue: 'Continue',
@@ -15,7 +15,7 @@ const translations = {
     homeLabel: 'RSSonar Startseite', monitorLabel: 'Feed-Monitor', themeLabel: 'Design', themeSystem: 'System', themeLight: 'Hell', themeDark: 'Dunkel', languageLabel: 'Sprache', rssOpenLabel: 'Gesammelten RSS-Feed öffnen', rssFeedLabel: 'RSS-Feed',
     heroEyebrow: 'DEIN OPEN-SOURCE-UPDATE', heroLineOne: 'Alles Neue.', heroLineTwo: 'Ein Blick.', heroDescription: 'Die neuesten Releases deiner Anwendungen, gesammelt aus ihren RSS- und Atom-Feeds. Direkt zur Originalmeldung auf GitHub oder Codeberg.', viewReleases: 'Releases ansehen', refreshNow: 'Jetzt aktualisieren', overviewLabel: 'ÜBERSICHT', activeFeeds: 'aktive Feeds', trackedReleases: 'erfasste Releases',
     latestEyebrow: 'AKTUELLE MELDUNGEN', releaseStream: 'Release-Stream', searchPlaceholder: 'Releases durchsuchen', projectLabel: 'Projekt', filterLabel: 'Nach Projekt filtern', allProjects: 'Alle Projekte',
-    limitLabel: 'Neueste', limitAria: 'Anzahl der neuesten Releases', saveLimit: 'Speichern', limitSaved: 'Anzeigelimit gespeichert.', limitInvalid: 'Bitte eine ganze Zahl von 1 bis 500 wählen.', showingCount: '{shown} von {total} Einträgen',
+    limitLabel: 'Neueste pro Feed', limitAria: 'Anzahl der neuesten Releases pro Feed', saveLimit: 'Speichern', limitSaved: 'Anzeigelimit gespeichert.', limitInvalid: 'Bitte eine ganze Zahl von 1 bis 500 pro Feed wählen.', showingCount: '{shown} von {total} Einträgen',
     manageEyebrow: 'QUELLEN VERWALTEN', yourFeeds: 'Deine Feeds', sortLabel: 'Feeds sortieren', sortNameAsc: 'Name A–Z', sortNameDesc: 'Name Z–A', sortNewest: 'Zuletzt hinzugefügt', sortOldest: 'Zuerst hinzugefügt',
     addHeading: 'Neuen Feed hinzufügen', appNameLabel: 'Anwendungsname', appNamePlaceholder: 'z. B. Nextcloud', feedUrlLabel: 'RSS- oder Atom-URL', addFeed: 'Feed hinzufügen', oneFeedHeading: 'Ein Feed für alles.', oneFeedDescription: 'Abonniere den gemeinsamen RSS-Feed in deinem Reader. Neue Einträge erscheinen hier nach der nächsten Prüfung.', rssOpenLink: 'Gesammelten RSS-Feed öffnen →', signalHeading: 'Signal-Benachrichtigungen', signalEnabled: 'Signal ist eingerichtet. Neue Releases werden als Nachricht versendet.', signalDisabled: 'Signal ist nicht eingerichtet. Die Einrichtung erfolgt über die Server-Konfiguration.',
     footerTagline: 'Open Source im Blick.', rssSubscribe: 'RSS abonnieren ↗', unlockHeading: 'Verwaltung freischalten', tokenHelp: 'Gib den Admin-Token aus der Server-Konfiguration ein.', tokenLabel: 'Admin-Token', cancel: 'Abbrechen', continue: 'Weiter',
@@ -147,9 +147,19 @@ function sortedFeeds() {
 
 function renderStatus() {
   $('#metric-feeds').textContent = snapshot.feeds.filter(feed => feed.enabled).length;
-  $('#metric-releases').textContent = snapshot.releases.length;
+  $('#metric-releases').textContent = snapshot.release_count ?? snapshot.releases.length;
   $('#poll-label').textContent = t('checkEvery', { minutes: snapshot.interval_minutes });
   $('#signal-status').textContent = t(snapshot.signal_enabled ? 'signalEnabled' : 'signalDisabled');
+}
+
+function takeLatestPerFeed(releases, limit) {
+  const counts = new Map();
+  return releases.filter(release => {
+    const count = counts.get(release.feed_id) || 0;
+    if (count >= limit) return false;
+    counts.set(release.feed_id, count + 1);
+    return true;
+  });
 }
 
 function renderReleases() {
@@ -157,7 +167,7 @@ function renderReleases() {
   const feed = $('#filter').value;
   const filtered = snapshot.releases.filter(release => (!feed || release.feed_id === feed) &&
     (!query || `${release.app} ${release.title} ${release.summary || ''}`.toLocaleLowerCase(language).includes(query)));
-  const entries = filtered.slice(0, releaseLimit);
+  const entries = takeLatestPerFeed(filtered, releaseLimit);
   $('#result-count').textContent = filtered.length > entries.length
     ? t('showingCount', { shown: entries.length, total: filtered.length })
     : `${entries.length} ${t(entries.length === 1 ? 'entrySingular' : 'entryPlural')}`;

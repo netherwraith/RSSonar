@@ -10,7 +10,7 @@
 
 - Add, rename, pause, and remove feeds in the web interface. Sort feeds by name (A–Z by default, or Z–A) or by when they were added.
 - Check feeds every 15 minutes by default, with a manual refresh option.
-- Search releases and filter by application. Set and save how many of the latest matching releases to display (1–500; 20 by default). Each entry links to the original release URL from its feed, such as a GitHub or Codeberg release page.
+- Search releases and filter by application. Set and save how many of the latest matching releases to display **per feed** (1–500; 20 by default). With 5 selected and 14 feeds, up to 70 releases appear in one chronological stream. Each entry links to the original release URL from its feed, such as a GitHub or Codeberg release page.
 - Switch between light, dark, and system themes and between English (default) and German. Display preferences are saved in the browser.
 - Subscribe to the combined RSS 2.0 feed at `/rss.xml`.
 - Deduplicate entries by feed and GUID; stored releases survive restarts.
@@ -81,7 +81,7 @@ The public dashboard and `/rss.xml` do not require the admin token. If you put a
 
 ## Feed URLs
 
-A GitHub release feed often has the form `https://github.com/OWNER/REPO/releases.atom`. For Codeberg, use the RSS or Atom URL offered by the repository's release page. RSSonar follows the link supplied by each feed entry; it does not fabricate a release URL. The first successful fetch imports existing entries **without Signal notifications**. Only entries found on later checks can trigger notifications.
+A GitHub release feed often has the form `https://github.com/OWNER/REPO/releases.atom`. A Codeberg/Forgejo release feed uses `https://codeberg.org/OWNER/REPO/releases.rss`; the `/releases` URL itself is an HTML page, not a feed. RSSonar converts Codeberg release page URLs to `.rss` automatically, including previously saved feeds on their next successful check. For other Forgejo hosts, enter the actual `.rss` feed URL. RSSonar follows the link supplied by each feed entry; it does not fabricate a release URL. The first successful fetch imports existing entries **without Signal notifications**. Only entries found on later checks can trigger notifications.
 
 ## Existing Signal API (optional)
 
@@ -108,6 +108,7 @@ Separate multiple recipients with commas. The external API must be reachable fro
 ```sh
 python3 -m unittest discover -s tests -v
 python3 -m py_compile app.py
+node tests/test_frontend.js
 ```
 
 License: MIT.

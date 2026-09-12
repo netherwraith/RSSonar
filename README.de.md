@@ -10,7 +10,7 @@
 
 - Feeds über die Webseite hinzufügen, umbenennen, pausieren und entfernen. Sortierung nach Name (A–Z als Standard oder Z–A) oder Hinzufügung.
 - Automatische Prüfung alle 15 Minuten (konfigurierbar) sowie manuelle Aktualisierung.
-- Releases nach Anwendung filtern und durchsuchen. Die Anzahl der neuesten angezeigten Treffer ist frei wählbar und speicherbar (1–500; Standard 20). Jeder Eintrag führt zur Original-URL des Feeds, etwa zu GitHub oder Codeberg.
+- Releases nach Anwendung filtern und durchsuchen. Die Anzahl der neuesten angezeigten Treffer ist **pro Feed** wählbar und speicherbar (1–500; Standard 20). Bei 5 und 14 Feeds erscheinen bis zu 70 Releases in einem chronologischen Stream. Jeder Eintrag führt zur Original-URL des Feeds, etwa zu GitHub oder Codeberg.
 - Zwischen hellem, dunklem und System-Design sowie Englisch (Standard) und Deutsch umschalten. Anzeigeeinstellungen werden im Browser gespeichert.
 - Zusammengefasster RSS-2.0-Feed unter `/rss.xml`.
 - Deduplizierung über Feed und GUID; bereits gespeicherte Einträge überstehen Neustarts.
@@ -71,7 +71,7 @@ Die öffentliche Webseite und `/rss.xml` sind ohne Admin-Token lesbar. Falls der
 
 ## Feed-URLs
 
-Auf GitHub ist häufig `https://github.com/OWNER/REPO/releases.atom` geeignet. Bei Codeberg sollte die konkrete RSS-/Atom-URL der jeweiligen Release-Seite verwendet werden. RSSonar nutzt den Link aus jedem Feed-Eintrag als Ziel; es erfindet keine Release-URL. Der erste erfolgreiche Abruf übernimmt bestehende Einträge **ohne Signal-Meldungen**. Erst danach neu auftauchende Einträge lösen Benachrichtigungen aus.
+Auf GitHub ist häufig `https://github.com/OWNER/REPO/releases.atom` geeignet. Bei Codeberg/Forgejo lautet die Release-Feed-URL `https://codeberg.org/OWNER/REPO/releases.rss`; die Adresse mit nur `/releases` liefert HTML statt eines Feeds. RSSonar korrigiert Codeberg-Release-Seiten automatisch zu `.rss`, auch bei bereits gespeicherten Feeds nach dem nächsten erfolgreichen Abruf. Bei anderen Forgejo-Instanzen die tatsächliche `.rss`-Feed-URL eintragen. RSSonar nutzt den Link aus jedem Feed-Eintrag als Ziel; es erfindet keine Release-URL. Der erste erfolgreiche Abruf übernimmt bestehende Einträge **ohne Signal-Meldungen**. Erst danach neu auftauchende Einträge lösen Benachrichtigungen aus.
 
 ## Signal einrichten (optional)
 
@@ -98,6 +98,7 @@ Mehrere Empfänger können kommasepariert angegeben werden. Der externe Dienst m
 ```sh
 python3 -m unittest discover -s tests -v
 python3 -m py_compile app.py
+node tests/test_frontend.js
 ```
 
 Lizenz: MIT.

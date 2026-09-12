@@ -2,6 +2,7 @@ import importlib.util
 import os
 import tempfile
 import unittest
+from email.message import Message
 from pathlib import Path
 from unittest.mock import patch
 from xml.etree import ElementTree
@@ -68,6 +69,55 @@ class RSSonarTests(unittest.TestCase):
         self.assertEqual(responses[0][0], 201)
         self.assertEqual(responses[0][1]["created"], self.app.state["feeds"][0]["created"])
         self.assertIsNotNone(self.app.datetime.fromisoformat(responses[0][1]["created"]).tzinfo)
+
+    def test_release_limit_api_keeps_each_feed_visible(self):
+        self.app.state["releases"] = ([{"feed_id": "busy", "published": str(n)} for n in range(600)]
+                                      + [{"feed_id": "quiet", "published": "old"}])
+        handler = object.__new__(self.app.Handler)
+        handler.path = "/api/state"
+        responses = []
+        handler.reply = lambda status, data: responses.append((status, data))
+        handler.do_GET()
+        data = responses[0][1]
+        self.assertEqual(data["release_count"], 601)
+        self.assertEqual(len(data["releases"]), 501)
+        self.assertEqual(data["releases"][-1]["feed_id"], "quiet")
+
+    def test_codeberg_release_page_is_normalized_on_add_and_poll(self):
+        page = "https://codeberg.org/forgejo/forgejo/releases"
+        feed_url = page + ".rss"
+        self.assertEqual(self.app.normalize_feed_url(page), feed_url)
+        self.assertEqual(self.app.normalize_feed_url(page + "/"), feed_url)
+        self.assertEqual(self.app.normalize_feed_url("https://github.com/o/r/releases"),
+                         "https://github.com/o/r/releases")
+        self.feed["url"] = page
+        self.app.state["feeds"].append(self.feed)
+        rss = b'<rss><channel><item><title>v1</title><link>https://codeberg.org/forgejo/forgejo/releases/tag/v1</link></item></channel></rss>'
+        with patch.object(self.app, "fetch_feed", return_value=rss) as fetch:
+            self.app.poll()
+        fetch.assert_called_once_with(feed_url)
+        self.assertEqual(self.app.state["feeds"][0]["url"], feed_url)
+        self.assertEqual(self.app.state["releases"][0]["url"],
+                         "https://codeberg.org/forgejo/forgejo/releases/tag/v1")
+
+    def test_html_release_page_gets_clear_error(self):
+        class Response:
+            status = 200
+            headers = Message()
+            headers["Content-Type"] = "text/html; charset=utf-8"
+
+            def __enter__(self):
+                return self
+
+            def __exit__(self, *args):
+                pass
+
+            def read(self, size):
+                return b'<!DOCTYPE html><html><body></body></html>'
+
+        with patch.object(self.app.urllib.request, "urlopen", return_value=Response()):
+            with self.assertRaisesRegex(ValueError, r"webpage.*releases\.rss"):
+                self.app.fetch_feed("https://forgejo.example/o/r/releases")
 
 
 if __name__ == "__main__":
