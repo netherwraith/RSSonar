@@ -114,20 +114,20 @@ def parse_feed(raw, feed):
     if kind == "rss":
         channel = child(root, "channel")
         if channel is None:
-            raise ValueError("RSS-Kanal fehlt")
+            raise ValueError("RSS channel missing")
         items = [x for x in channel if tag(x) == "item"]
     elif kind == "feed":
         items = [x for x in root if tag(x) == "entry"]
     elif kind == "rdf":
         items = [x for x in root if tag(x) == "item"]
     else:
-        raise ValueError("Kein RSS- oder Atom-Feed")
+        raise ValueError("Not an RSS or Atom feed")
     result = []
     for item in items[:100]:
         link = release_url(item)
         if not valid_url(link):
             continue
-        title = clean_text(value(item, "title")) or "Unbenanntes Release"
+        title = clean_text(value(item, "title")) or "Untitled release"
         guid = value(item, "guid", "id") or link
         rid = hashlib.sha256((feed["id"] + "\0" + guid).encode()).hexdigest()[:24]
         result.append({"id": rid, "feed_id": feed["id"], "app": feed["name"],
@@ -146,14 +146,14 @@ def fetch_feed(url):
             raise ValueError("HTTP %s" % response.status)
         raw = response.read(2_000_001)
         if len(raw) > 2_000_000:
-            raise ValueError("Feed größer als 2 MB")
+            raise ValueError("Feed exceeds 2 MB")
         return raw
 
 
 def signal_send(release):
     if not (SIGNAL_URL and SIGNAL_NUMBER and SIGNAL_RECIPIENTS):
         return False
-    message = "Neues Release: %s — %s\n%s" % (release["app"], release["title"], release["url"])
+    message = "New release: %s — %s\n%s" % (release["app"], release["title"], release["url"])
     payload = json.dumps({"message": message, "number": SIGNAL_NUMBER,
                           "recipients": SIGNAL_RECIPIENTS}).encode()
     request = urllib.request.Request(SIGNAL_URL + "/v2/send", data=payload,
@@ -206,7 +206,7 @@ def poll():
                             current["notification"] = "sent"
                             save()
                 except (OSError, ValueError, urllib.error.URLError) as exc:
-                    print("Signal-Versand fehlgeschlagen: %s" % exc, flush=True)
+                    print("Signal delivery failed: %s" % exc, flush=True)
         return True
     finally:
         poll_lock.release()
@@ -218,8 +218,8 @@ def rss_xml():
         releases = list(state["releases"][:100])
     base = PUBLIC_URL or "http://localhost:%s" % PORT
     parts = ['<?xml version="1.0" encoding="UTF-8"?>', '<rss version="2.0"><channel>',
-             '<title>RSSonar</title><description>Open-Source-Releases</description>',
-             '<link>%s</link>' % escape(base), '<language>de</language>']
+             '<title>RSSonar</title><description>Open-source releases</description>',
+             '<link>%s</link>' % escape(base), '<language>en</language>']
     for item in releases:
         stamp = datetime.fromisoformat(item["published"])
         parts += ['<item><title>%s</title>' % escape(item["app"] + " — " + item["title"]),
@@ -251,7 +251,7 @@ class Handler(BaseHTTPRequestHandler):
     def body(self):
         size = int(self.headers.get("Content-Length", "0"))
         if size < 1 or size > 10000:
-            raise ValueError("Ungültige Anfragegröße")
+            raise ValueError("Invalid request size")
         return json.loads(self.rfile.read(size))
 
     def do_GET(self):
@@ -267,11 +267,11 @@ class Handler(BaseHTTPRequestHandler):
                                         "interval_minutes": INTERVAL // 60})
         if path == "/rss.xml":
             return self.reply(200, rss_xml(), "application/rss+xml; charset=utf-8")
-        self.reply(404, {"error": "Nicht gefunden"})
+        self.reply(404, {"error": "Not found"})
 
     def do_POST(self):
         if not self.authorized():
-            return self.reply(401, {"error": "Admin-Token fehlt oder ist falsch"})
+            return self.reply(401, {"error": "Admin token missing or incorrect"})
         path = urllib.parse.urlsplit(self.path).path
         try:
             if path == "/api/feeds":
@@ -279,11 +279,12 @@ class Handler(BaseHTTPRequestHandler):
                 name = str(body.get("name", "")).strip()[:80]
                 url = str(body.get("url", "")).strip()
                 if not name or not valid_url(url) or len(url) > 1000:
-                    return self.reply(400, {"error": "Name und gültige HTTP(S)-Feed-URL erforderlich"})
+                    return self.reply(400, {"error": "Name and a valid HTTP(S) feed URL are required"})
                 with lock:
                     if any(f["url"] == url for f in state["feeds"]):
-                        return self.reply(409, {"error": "Feed ist bereits vorhanden"})
+                        return self.reply(409, {"error": "Feed already exists"})
                     feed = {"id": secrets.token_hex(8), "name": name, "url": url,
+                            "created": datetime.now(timezone.utc).isoformat(),
                             "enabled": True, "checked": "", "error": ""}
                     state["feeds"].append(feed)
                     save()
@@ -291,16 +292,16 @@ class Handler(BaseHTTPRequestHandler):
                 return self.reply(201, feed)
             if path == "/api/refresh":
                 if poll_lock.locked():
-                    return self.reply(409, {"error": "Aktualisierung läuft bereits"})
+                    return self.reply(409, {"error": "A refresh is already in progress"})
                 threading.Thread(target=poll, daemon=True).start()
                 return self.reply(202, {"ok": True})
         except (ValueError, json.JSONDecodeError) as exc:
             return self.reply(400, {"error": str(exc)})
-        self.reply(404, {"error": "Nicht gefunden"})
+        self.reply(404, {"error": "Not found"})
 
     def do_DELETE(self):
         if not self.authorized():
-            return self.reply(401, {"error": "Admin-Token fehlt oder ist falsch"})
+            return self.reply(401, {"error": "Admin token missing or incorrect"})
         path = urllib.parse.urlsplit(self.path).path
         if path.startswith("/api/feeds/"):
             fid = path.rsplit("/", 1)[-1]
@@ -308,15 +309,15 @@ class Handler(BaseHTTPRequestHandler):
                 before = len(state["feeds"])
                 state["feeds"] = [f for f in state["feeds"] if f["id"] != fid]
                 if len(state["feeds"]) == before:
-                    return self.reply(404, {"error": "Feed nicht gefunden"})
+                    return self.reply(404, {"error": "Feed not found"})
                 state["releases"] = [r for r in state["releases"] if r["feed_id"] != fid]
                 save()
             return self.reply(200, {"ok": True})
-        self.reply(404, {"error": "Nicht gefunden"})
+        self.reply(404, {"error": "Not found"})
 
     def do_PATCH(self):
         if not self.authorized():
-            return self.reply(401, {"error": "Admin-Token fehlt oder ist falsch"})
+            return self.reply(401, {"error": "Admin token missing or incorrect"})
         path = urllib.parse.urlsplit(self.path).path
         if path.startswith("/api/feeds/"):
             fid = path.rsplit("/", 1)[-1]
@@ -325,11 +326,11 @@ class Handler(BaseHTTPRequestHandler):
                 with lock:
                     feed = next((f for f in state["feeds"] if f["id"] == fid), None)
                     if not feed:
-                        return self.reply(404, {"error": "Feed nicht gefunden"})
+                        return self.reply(404, {"error": "Feed not found"})
                     if "name" in body:
                         name = str(body["name"]).strip()[:80]
                         if not name:
-                            return self.reply(400, {"error": "Name fehlt"})
+                            return self.reply(400, {"error": "Name is required"})
                         feed["name"] = name
                         for release in state["releases"]:
                             if release["feed_id"] == fid:
@@ -340,7 +341,7 @@ class Handler(BaseHTTPRequestHandler):
                 return self.reply(200, feed)
             except (ValueError, json.JSONDecodeError) as exc:
                 return self.reply(400, {"error": str(exc)})
-        self.reply(404, {"error": "Nicht gefunden"})
+        self.reply(404, {"error": "Not found"})
 
 
 def scheduler():
@@ -352,9 +353,9 @@ def scheduler():
 
 if __name__ == "__main__":
     if os.environ.get("ADMIN_TOKEN") and (len(TOKEN) < 20 or TOKEN == "replace-with-a-long-random-secret"):
-        raise SystemExit("ADMIN_TOKEN muss ein eigener, mindestens 20 Zeichen langer Zufallswert sein.")
+        raise SystemExit("ADMIN_TOKEN must be a unique random value of at least 20 characters.")
     print("RSSonar: http://%s:%s" % (HOST, PORT), flush=True)
     if not os.environ.get("ADMIN_TOKEN"):
-        print("Temporärer Admin-Token: %s" % TOKEN, flush=True)
+        print("Temporary admin token: %s" % TOKEN, flush=True)
     threading.Thread(target=scheduler, daemon=True).start()
     ThreadingHTTPServer((HOST, PORT), Handler).serve_forever()

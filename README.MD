@@ -8,9 +8,10 @@
 
 ## Features
 
-- Add, rename, pause, and remove feeds in the web interface. Fourteen feeds require no special setup.
+- Add, rename, pause, and remove feeds in the web interface. Sort feeds by name (A–Z by default, or Z–A) or by when they were added.
 - Check feeds every 15 minutes by default, with a manual refresh option.
-- Search releases and filter by application. Each entry links to the original release URL from its feed, such as a GitHub or Codeberg release page.
+- Search releases and filter by application. Set and save how many of the latest matching releases to display (1–500; 20 by default). Each entry links to the original release URL from its feed, such as a GitHub or Codeberg release page.
+- Switch between light, dark, and system themes and between English (default) and German. Display preferences are saved in the browser.
 - Subscribe to the combined RSS 2.0 feed at `/rss.xml`.
 - Deduplicate entries by feed and GUID; stored releases survive restarts.
 - Optionally send new entries through an existing [signal-cli-rest-api](https://github.com/bbernhard/signal-cli-rest-api). RSSonar does not start or bundle a Signal service.

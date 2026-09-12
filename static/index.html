@@ -1,10 +1,10 @@
 <!doctype html>
-<html lang="de">
+<html lang="en">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#101c2d">
-  <meta name="description" content="Open-Source-Releases aus deinen RSS- und Atom-Feeds an einem Ort.">
+  <meta name="description" content="Open-source releases from your RSS and Atom feeds in one place.">
   <title>RSSonar</title>
   <link rel="icon" type="image/svg+xml" href="/logo.svg">
   <link rel="stylesheet" href="/style.css">
@@ -12,40 +12,45 @@
 </head>
 <body>
   <header class="topbar">
-    <a class="brand" href="/" aria-label="RSSonar Startseite"><img class="brand-icon" src="/logo.svg" alt=""><strong>RSS<span>ONAR</span></strong></a>
-    <div class="top-actions"><span class="live-dot"></span><span class="live-label">Feed-Monitor</span><a class="rss-link" href="/rss.xml" aria-label="Gesammelten RSS-Feed öffnen">◉ <span>RSS-Feed</span></a></div>
+    <a class="brand" href="/" aria-label="RSSonar home" data-i18n-aria="homeLabel"><img class="brand-icon" src="/logo.svg" alt=""><strong>RSS<span>ONAR</span></strong></a>
+    <div class="top-actions">
+      <span class="live-dot"></span><span class="live-label" data-i18n="monitorLabel">Feed monitor</span>
+      <label class="header-select"><span data-i18n="themeLabel">Theme</span><select id="theme-switch" aria-label="Theme" data-i18n-aria="themeLabel"><option value="system" data-i18n="themeSystem">System</option><option value="light" data-i18n="themeLight">Light</option><option value="dark" data-i18n="themeDark">Dark</option></select></label>
+      <label class="header-select"><span data-i18n="languageLabel">Language</span><select id="language-switch" aria-label="Language" data-i18n-aria="languageLabel"><option value="en">English</option><option value="de">Deutsch</option></select></label>
+      <a class="rss-link" href="/rss.xml" aria-label="Open combined RSS feed" data-i18n-aria="rssOpenLabel">◉ <span data-i18n="rssFeedLabel">RSS feed</span></a>
+    </div>
   </header>
 
   <main>
     <section class="hero">
       <div class="hero-copy">
-        <p class="eyebrow">DEIN OPEN-SOURCE-UPDATE</p>
-        <h1>Alles Neue.<br><em>Ein Blick.</em></h1>
-        <p class="hero-desc">Die neuesten Releases deiner Anwendungen, gesammelt aus ihren RSS- und Atom-Feeds. Direkt zur Originalmeldung auf GitHub oder Codeberg.</p>
-        <div class="hero-actions"><a href="#releases" class="primary-button">Releases ansehen <span aria-hidden="true">↗</span></a><button id="refresh" class="ghost-button" type="button">Jetzt aktualisieren <span aria-hidden="true">↻</span></button></div>
+        <p class="eyebrow" data-i18n="heroEyebrow">YOUR OPEN-SOURCE UPDATE</p>
+        <h1><span data-i18n="heroLineOne">All the latest.</span><br><em data-i18n="heroLineTwo">One clear view.</em></h1>
+        <p class="hero-desc" data-i18n="heroDescription">The latest releases from your RSS and Atom feeds, collected in one place. Go straight to the original announcement on GitHub or Codeberg.</p>
+        <div class="hero-actions"><a href="#releases" class="primary-button"><span data-i18n="viewReleases">View releases</span><span aria-hidden="true">↗</span></a><button id="refresh" class="ghost-button" type="button"><span data-i18n="refreshNow">Refresh now</span><span aria-hidden="true">↻</span></button></div>
       </div>
-      <div class="hero-panel" aria-label="Übersicht">
-        <div class="panel-head"><span>ÜBERSICHT</span><span class="panel-dots">•••</span></div>
-        <div class="metric"><strong id="metric-feeds">0</strong><span>aktive Feeds</span></div>
+      <div class="hero-panel" aria-label="Overview" data-i18n-aria="overviewLabel">
+        <div class="panel-head"><span data-i18n="overviewLabel">OVERVIEW</span><span class="panel-dots">•••</span></div>
+        <div class="metric"><strong id="metric-feeds">0</strong><span data-i18n="activeFeeds">active feeds</span></div>
         <div class="metric-divider"></div>
-        <div class="metric"><strong id="metric-releases">0</strong><span>erfasste Releases</span></div>
-        <div class="panel-bottom"><span class="pulse"></span><span id="poll-label">Prüfung alle 15 Minuten</span></div>
+        <div class="metric"><strong id="metric-releases">0</strong><span data-i18n="trackedReleases">tracked releases</span></div>
+        <div class="panel-bottom"><span class="pulse"></span><span id="poll-label">Checks every 15 minutes</span></div>
       </div>
     </section>
 
     <section class="content" id="releases">
-      <div class="section-heading"><div><p class="eyebrow">AKTUELLE MELDUNGEN</p><h2>Release-Stream</h2></div><span id="result-count" class="result-count">0 Einträge</span></div>
-      <div class="toolbar"><label class="search-wrap"><span aria-hidden="true">⌕</span><input id="search" type="search" placeholder="Releases durchsuchen" aria-label="Releases durchsuchen"></label><label class="select-wrap"><span>Projekt</span><select id="filter" aria-label="Nach Projekt filtern"><option value="">Alle Projekte</option></select></label></div>
+      <div class="section-heading"><div><p class="eyebrow" data-i18n="latestEyebrow">LATEST UPDATES</p><h2 data-i18n="releaseStream">Release stream</h2></div><span id="result-count" class="result-count">0 entries</span></div>
+      <div class="toolbar"><label class="search-wrap"><span aria-hidden="true">⌕</span><input id="search" type="search" placeholder="Search releases" data-i18n-placeholder="searchPlaceholder" aria-label="Search releases" data-i18n-aria="searchPlaceholder"></label><label class="select-wrap"><span data-i18n="projectLabel">Project</span><select id="filter" aria-label="Filter by project" data-i18n-aria="filterLabel"><option value="">All projects</option></select></label><label class="limit-wrap"><span data-i18n="limitLabel">Latest</span><input id="release-limit" type="number" min="1" max="500" value="20" aria-label="Number of latest releases" data-i18n-aria="limitAria"></label><button id="save-limit" class="save-button" type="button" data-i18n="saveLimit">Save</button></div>
       <div id="release-list" class="release-list" aria-live="polite"></div>
     </section>
 
     <section class="manage" id="feeds">
-      <div class="section-heading"><div><p class="eyebrow">QUELLEN VERWALTEN</p><h2>Deine Feeds</h2></div><span class="section-note">RSS und Atom · GitHub, Codeberg und mehr</span></div>
-      <div class="manage-grid"><div class="manage-main"><div id="feed-list" class="feed-list"></div><div class="add-box"><h3>Neuen Feed hinzufügen</h3><form id="add-form"><label>Anwendungsname<input id="feed-name" name="name" required maxlength="80" placeholder="z. B. Nextcloud"></label><label>RSS- oder Atom-URL<input id="feed-url" name="url" type="url" required placeholder="https://github.com/…/releases.atom"></label><button class="primary-button" type="submit">Feed hinzufügen <span aria-hidden="true">＋</span></button></form></div></div><aside class="info-panel"><div class="info-icon">↗</div><h3>Ein Feed für alles.</h3><p>Abonniere den gemeinsamen RSS-Feed in deinem Reader. Neue Einträge erscheinen hier nach der nächsten Prüfung.</p><a href="/rss.xml">Gesammelten RSS-Feed öffnen →</a><div class="aside-rule"></div><h4>Signal-Benachrichtigungen</h4><p id="signal-status">Signal ist nicht eingerichtet. Die Einrichtung erfolgt über die Server-Konfiguration.</p></aside></div>
+      <div class="section-heading"><div><p class="eyebrow" data-i18n="manageEyebrow">MANAGE SOURCES</p><h2 data-i18n="yourFeeds">Your feeds</h2></div><label class="sort-control"><span data-i18n="sortLabel">Sort feeds</span><select id="feed-sort" aria-label="Sort feeds" data-i18n-aria="sortLabel"><option value="name-asc" data-i18n="sortNameAsc">Name A–Z</option><option value="name-desc" data-i18n="sortNameDesc">Name Z–A</option><option value="added-newest" data-i18n="sortNewest">Recently added</option><option value="added-oldest" data-i18n="sortOldest">First added</option></select></label></div>
+      <div class="manage-grid"><div class="manage-main"><div id="feed-list" class="feed-list"></div><div class="add-box"><h3 data-i18n="addHeading">Add a feed</h3><form id="add-form"><label><span data-i18n="appNameLabel">Application name</span><input id="feed-name" name="name" required maxlength="80" placeholder="e.g. Nextcloud" data-i18n-placeholder="appNamePlaceholder"></label><label><span data-i18n="feedUrlLabel">RSS or Atom URL</span><input id="feed-url" name="url" type="url" required placeholder="https://github.com/…/releases.atom"></label><button class="primary-button" type="submit"><span data-i18n="addFeed">Add feed</span><span aria-hidden="true">＋</span></button></form></div></div><aside class="info-panel"><div class="info-icon">↗</div><h3 data-i18n="oneFeedHeading">One feed for everything.</h3><p data-i18n="oneFeedDescription">Subscribe to the combined RSS feed in your reader. New entries appear after the next check.</p><a href="/rss.xml" data-i18n="rssOpenLink">Open combined RSS feed →</a><div class="aside-rule"></div><h4 data-i18n="signalHeading">Signal notifications</h4><p id="signal-status">Signal is not configured. Set it up in the server configuration.</p></aside></div>
     </section>
   </main>
-  <footer><span>RSSONAR</span><span>Open Source im Blick.</span><a href="/rss.xml">RSS abonnieren ↗</a></footer>
-  <dialog id="token-dialog"><form method="dialog" id="token-form"><h2>Verwaltung freischalten</h2><p>Gib den Admin-Token aus der Server-Konfiguration ein.</p><input id="token-input" type="password" autocomplete="off" required aria-label="Admin-Token"><menu><button type="button" id="token-cancel" class="ghost-button">Abbrechen</button><button type="submit" class="primary-button">Weiter</button></menu></form></dialog>
+  <footer><span>RSSONAR</span><span data-i18n="footerTagline">Open source in view.</span><a href="/rss.xml" data-i18n="rssSubscribe">Subscribe to RSS ↗</a></footer>
+  <dialog id="token-dialog"><form method="dialog" id="token-form"><h2 data-i18n="unlockHeading">Unlock management</h2><p data-i18n="tokenHelp">Enter the admin token from the server configuration.</p><input id="token-input" type="password" autocomplete="off" required aria-label="Admin token" data-i18n-aria="tokenLabel"><menu><button type="button" id="token-cancel" class="ghost-button" data-i18n="cancel">Cancel</button><button type="submit" class="primary-button" data-i18n="continue">Continue</button></menu></form></dialog>
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
 </body>
 </html>

@@ -56,6 +56,19 @@ class RSSonarTests(unittest.TestCase):
         self.assertEqual(send.call_count, 1)
         self.assertEqual(next(r for r in self.app.state["releases"] if r["title"] == "v2")["notification"], "sent")
 
+    def test_new_feed_records_its_added_time(self):
+        handler = object.__new__(self.app.Handler)
+        handler.path = "/api/feeds"
+        handler.authorized = lambda: True
+        handler.body = lambda: {"name": "Example", "url": "https://example.org/releases.rss"}
+        responses = []
+        handler.reply = lambda status, data: responses.append((status, data))
+        with patch.object(self.app.threading, "Thread"):
+            handler.do_POST()
+        self.assertEqual(responses[0][0], 201)
+        self.assertEqual(responses[0][1]["created"], self.app.state["feeds"][0]["created"])
+        self.assertIsNotNone(self.app.datetime.fromisoformat(responses[0][1]["created"]).tzinfo)
+
 
 if __name__ == "__main__":
     unittest.main()

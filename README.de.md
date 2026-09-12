@@ -8,9 +8,10 @@
 
 ## Funktionen
 
-- Feeds über die Webseite hinzufügen und entfernen; 14 Feeds sind kein Sonderfall.
+- Feeds über die Webseite hinzufügen, umbenennen, pausieren und entfernen. Sortierung nach Name (A–Z als Standard oder Z–A) oder Hinzufügung.
 - Automatische Prüfung alle 15 Minuten (konfigurierbar) sowie manuelle Aktualisierung.
-- Releases nach Anwendung filtern und durchsuchen. Jeder Eintrag führt zur Original-URL des Feeds, etwa zu GitHub oder Codeberg.
+- Releases nach Anwendung filtern und durchsuchen. Die Anzahl der neuesten angezeigten Treffer ist frei wählbar und speicherbar (1–500; Standard 20). Jeder Eintrag führt zur Original-URL des Feeds, etwa zu GitHub oder Codeberg.
+- Zwischen hellem, dunklem und System-Design sowie Englisch (Standard) und Deutsch umschalten. Anzeigeeinstellungen werden im Browser gespeichert.
 - Zusammengefasster RSS-2.0-Feed unter `/rss.xml`.
 - Deduplizierung über Feed und GUID; bereits gespeicherte Einträge überstehen Neustarts.
 - Optionaler Signal-Versand über eine bereits vorhandene [signal-cli-rest-api](https://github.com/bbernhard/signal-cli-rest-api). RSSonar startet keinen Signal-Dienst.
