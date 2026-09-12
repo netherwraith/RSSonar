@@ -13,14 +13,3 @@ services:
       SIGNAL_RECIPIENTS: ${SIGNAL_RECIPIENTS:-}
     volumes:
       - ./data:/app/data
-
-  signal-api:
-    image: bbernhard/signal-cli-rest-api:latest
-    profiles: ["signal"]
-    restart: unless-stopped
-    environment:
-      MODE: json-rpc
-    ports:
-      - "127.0.0.1:8080:8080"
-    volumes:
-      - ./signal-data:/home/.local/share/signal-cli

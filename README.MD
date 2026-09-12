@@ -1,77 +1,92 @@
 # RSSonar
 
-**Open-Source-Releases im Blick.** RSSonar sammelt Release-Einträge aus beliebig vielen RSS- und Atom-Feeds, zeigt sie chronologisch auf einer Webseite und stellt unter `/rss.xml` einen gemeinsamen Feed bereit. Neue Einträge können optional per Signal zugestellt werden.
+**Keep open-source releases in view.** RSSonar collects releases from any number of RSS and Atom feeds, displays them in chronological order, and publishes one combined feed at `/rss.xml`. It can optionally forward new releases to an existing, separately hosted Signal API.
 
-## Funktionen
+[Deutsche Anleitung](README.de.md)
 
-- Feeds über die Webseite hinzufügen und entfernen; 14 Feeds sind kein Sonderfall.
-- Automatische Prüfung alle 15 Minuten (konfigurierbar) sowie manuelle Aktualisierung.
-- Releases nach Anwendung filtern und durchsuchen. Jeder Eintrag führt zur Original-URL des Feeds, etwa zu GitHub oder Codeberg.
-- Zusammengefasster RSS-2.0-Feed unter `/rss.xml`.
-- Deduplizierung über Feed und GUID; bereits gespeicherte Einträge überstehen Neustarts.
-- Optionaler Signal-Versand über [signal-cli-rest-api](https://github.com/bbernhard/signal-cli-rest-api).
-- Keine Python-Pakete, Datenbank oder Build-Schritte nötig; Python 3.9+ genügt.
+## Features
 
-## Schnellstart mit Docker Compose
+- Add, rename, pause, and remove feeds in the web interface. Fourteen feeds require no special setup.
+- Check feeds every 15 minutes by default, with a manual refresh option.
+- Search releases and filter by application. Each entry links to the original release URL from its feed, such as a GitHub or Codeberg release page.
+- Subscribe to the combined RSS 2.0 feed at `/rss.xml`.
+- Deduplicate entries by feed and GUID; stored releases survive restarts.
+- Optionally send new entries through an existing [signal-cli-rest-api](https://github.com/bbernhard/signal-cli-rest-api). RSSonar does not start or bundle a Signal service.
+- Run without Python packages, a database, or a build step; Python 3.9+ is sufficient.
+
+## Quick start with Docker Compose
 
 ```sh
 cp .env.example .env
 python3 -c 'import secrets; print(secrets.token_urlsafe(32))'
 ```
 
-Den ausgegebenen Wert in `.env` als `ADMIN_TOKEN` eintragen. Anschließend:
+Put the generated value into `.env` as `ADMIN_TOKEN`, then start RSSonar:
 
 ```sh
 docker compose up -d --build
 ```
 
-Die Oberfläche ist unter <http://localhost:8765> erreichbar. Beim ersten Hinzufügen oder manuellen Aktualisieren fragt sie nach dem Admin-Token. Er bleibt nur für den aktuellen Browser-Tab in `sessionStorage`. Die Webseite und `/rss.xml` sind ohne Token lesbar. Daten liegen in `./data/state.json`; dieses Verzeichnis sichern, wenn die Feed-Liste und Historie erhalten bleiben sollen.
+Open <http://localhost:8765>. The interface asks for the admin token when you first add a feed or trigger a manual refresh. It keeps the token in `sessionStorage` for the current browser tab only. The dashboard and `/rss.xml` are readable without a token. Application data lives in `./data/state.json`; back up this directory if you want to preserve the feed list and history.
 
-Ohne Docker:
+Without Docker:
 
 ```sh
-ADMIN_TOKEN='ein-langes-zufaelliges-geheimnis' python3 app.py
+ADMIN_TOKEN='use-a-long-random-secret-here' python3 app.py
 ```
 
-Für öffentlich erreichbare Installationen `PUBLIC_URL` auf die tatsächliche HTTPS-Adresse setzen und die Anwendung hinter einem HTTPS-Reverse-Proxy betreiben. Standardmäßig bindet Docker nur an `127.0.0.1`; `RSSONAR_BIND=0.0.0.0` öffnet den Port im Netzwerk. Den Signal-API-Port nicht öffentlich freigeben.
+## Reverse proxy
 
-## Feed-URLs
+RSSonar listens on port `8765` inside its container. Serve it at the root of a dedicated HTTPS hostname such as `https://releases.example.org`. Forward `/`, `/api/`, and `/rss.xml` unchanged to the same backend, and set `PUBLIC_URL=https://releases.example.org` in `.env`.
 
-Auf GitHub ist häufig `https://github.com/OWNER/REPO/releases.atom` geeignet. Bei Codeberg sollte die konkrete RSS-/Atom-URL der jeweiligen Release-Seite verwendet werden. RSSonar nutzt den Link aus jedem Feed-Eintrag als Ziel; es erfindet keine Release-URL. Der erste erfolgreiche Abruf übernimmt bestehende Einträge **ohne Signal-Meldungen**. Erst danach neu auftauchende Einträge lösen Benachrichtigungen aus.
+A reverse proxy running on the same host can reach the default binding at `http://127.0.0.1:8765`. If the proxy itself runs in a container, attach it and RSSonar to the same Docker network and use `http://rssonar:8765` as the upstream. A container's `127.0.0.1` refers to that container, not to the RSSonar host. Change `RSSONAR_BIND` to `0.0.0.0` only when the proxy is on another host and has no private network path; this exposes the port on every host interface.
 
-## Signal einrichten (optional)
+- **[Pangolin](https://docs.pangolin.net/manage/resources/public/targets):** Create a public HTTP resource for the hostname and set its target to a host reachable from the Pangolin site on port `8765`.
+- **[Traefik](https://doc.traefik.io/traefik/providers/docker/):** Put both containers on the same Docker network. Route ``Host(`releases.example.org`)`` to the RSSonar service on port `8765`, using your existing HTTPS entry point and certificate resolver.
+- **[Nginx](https://nginx.org/en/docs/http/ngx_http_proxy_module.html):** In an HTTPS `server` block, forward requests to RSSonar. For a proxy on the same host:
 
-RSSonar verwendet nicht eine offizielle Signal-Push-API, sondern die selbst betriebene [signal-cli-rest-api](https://github.com/bbernhard/signal-cli-rest-api). Der Versand nutzt deren dokumentierten Endpunkt `POST /v2/send`. In `.env` eintragen:
+  ```nginx
+  location / {
+      proxy_pass http://127.0.0.1:8765;
+      proxy_set_header Host $host;
+      proxy_set_header X-Forwarded-Proto $scheme;
+  }
+  ```
+
+  For separate containers, use the internal service name instead of the loopback address.
+- **[Nginx Proxy Manager (NPM)](https://nginxproxymanager.com/guide/):** Create a Proxy Host for the hostname with scheme `http`, forward hostname `rssonar` on a shared Docker network (or another reachable host address), and forward port `8765`. Enable an SSL certificate and HTTPS in the SSL tab.
+
+The public dashboard and `/rss.xml` do not require the admin token. If you put an additional login in front of the entire hostname, RSS readers will also need to support that login. Do not put the admin token in proxy labels or URLs.
+
+## Feed URLs
+
+A GitHub release feed often has the form `https://github.com/OWNER/REPO/releases.atom`. For Codeberg, use the RSS or Atom URL offered by the repository's release page. RSSonar follows the link supplied by each feed entry; it does not fabricate a release URL. The first successful fetch imports existing entries **without Signal notifications**. Only entries found on later checks can trigger notifications.
+
+## Existing Signal API (optional)
+
+RSSonar does not include a Signal API container. If you already operate [signal-cli-rest-api](https://github.com/bbernhard/signal-cli-rest-api), RSSonar can call its documented `POST /v2/send` endpoint. Set the base URL reachable **from the RSSonar container** and the sender and recipient numbers in `.env`:
 
 ```dotenv
-SIGNAL_API_URL=http://signal-api:8080
+SIGNAL_API_URL=https://signal-api.example.org
 SIGNAL_NUMBER=+491234567890
 SIGNAL_RECIPIENTS=+491234567890
 ```
 
-Mehrere Empfänger können kommasepariert angegeben werden. Den Dienst starten:
+Separate multiple recipients with commas. The external API must be reachable from RSSonar and accept its requests. Keep that API on a private network or behind a suitably protected proxy: RSSonar currently does not send additional API credentials. If delivery fails, the notification remains queued for the next check. A crash between a successful send and saving its confirmation can rarely cause a duplicate message. Leave all three Signal variables empty to disable delivery.
 
-```sh
-docker compose --profile signal up -d --build
-```
+## Operations and limitations
 
-Das Signal-Konto beziehungsweise Zweitgerät gemäß der [Projektanleitung](https://github.com/bbernhard/signal-cli-rest-api#-getting-started) verknüpfen. Die QR-Code-Seite ist lokal unter `http://localhost:8080/v1/qrcodelink?device_name=RSSonar` erreichbar. Die Signal-Daten werden in `./signal-data` gespeichert und sollten gesichert werden. Falls der Versand scheitert, bleibt die Nachricht zur erneuten Zustellung bei der nächsten Prüfung vorgemerkt. Bei einem Absturz zwischen erfolgreichem Versand und Speicherung der Bestätigung kann ausnahmsweise eine doppelte Nachricht entstehen.
+- Feeds are checked within the configured interval, not instantly when a release is published.
+- The server process must keep running. Static HTML hosting or traditional PHP hosting without a background job cannot provide scheduled checks and Signal delivery.
+- A feed may be at most 2 MB; RSSonar processes up to the first 100 entries on each fetch.
+- The admin API requires `X-Admin-Token`. For a public installation, use HTTPS and appropriate access controls for administration. Only trusted admins should receive the token because they can configure feed URLs.
+- The JSON state file is designed for a single application instance. Multiple replicas would need a shared database and coordinated polling.
 
-Ein bereits vorhandener Signal-API-Dienst lässt sich statt des Compose-Profils über `SIGNAL_API_URL` anbinden.
-
-## Betrieb und Grenzen
-
-- RSSonar prüft die Feeds innerhalb des konfigurierten Intervalls, nicht sekundengenau beim Release.
-- Der Serverprozess muss laufen. Reines statisches HTML oder klassischer PHP-Webspace ohne Hintergrundjob kann die regelmäßige Prüfung und Signal-Zustellung nicht leisten.
-- Feeds dürfen höchstens 2 MB groß sein; je Feed werden höchstens die ersten 100 Einträge eines Abrufs verarbeitet.
-- Die Admin-API akzeptiert nur Anfragen mit `X-Admin-Token`. Wer einen öffentlich erreichbaren Server betreibt, sollte zusätzlich HTTPS und üblichen Zugriffsschutz für die Verwaltung vorsehen. Admins können Feed-URLs konfigurieren; nur vertrauenswürdige Admins sollten den Token erhalten.
-- Die JSON-Datei ist für eine einzelne Serverinstanz gedacht. Mehrere parallel laufende Instanzen benötigen eine gemeinsame Datenbank und koordinierte Jobs.
-
-## Entwicklung
+## Development
 
 ```sh
 python3 -m unittest discover -s tests -v
 python3 -m py_compile app.py
 ```
 
-Lizenz: MIT.
+License: MIT.

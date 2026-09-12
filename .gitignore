@@ -1,6 +1,5 @@
 .env
 data/
-signal-data/
 __pycache__/
 *.pyc
 .DS_Store
