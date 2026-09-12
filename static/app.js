@@ -1,24 +1,24 @@
 const $ = selector => document.querySelector(selector);
 const translations = {
   en: {
-    homeLabel: 'RSSonar home', monitorLabel: 'Feed monitor', themeLabel: 'Theme', themeSystem: 'System', themeLight: 'Light', themeDark: 'Dark', languageLabel: 'Language', rssOpenLabel: 'Open combined RSS feed', rssFeedLabel: 'RSS feed',
+    homeLabel: 'RSSonar home', monitorLabel: 'Feed monitor', themeLabel: 'Theme', themeSystem: 'System', themeLight: 'Light', themeDark: 'Dark', languageLabel: 'Language', rssOpenLabel: 'Copy combined RSS feed link', rssFeedLabel: 'Copy RSS link', feedCopied: 'RSS feed link copied.', copyFeedManually: 'Copy this RSS feed link:',
     heroEyebrow: 'YOUR OPEN-SOURCE UPDATE', heroLineOne: 'All the latest.', heroLineTwo: 'One clear view.', heroDescription: 'The latest releases from your RSS and Atom feeds, collected in one place. Go straight to the original announcement on GitHub or Codeberg.', viewReleases: 'View releases', refreshNow: 'Refresh now', overviewLabel: 'OVERVIEW', activeFeeds: 'active feeds', trackedReleases: 'tracked releases',
     latestEyebrow: 'LATEST UPDATES', releaseStream: 'Release stream', searchPlaceholder: 'Search releases', projectLabel: 'Project', filterLabel: 'Filter by project', allProjects: 'All projects',
     limitLabel: 'Latest per feed', limitAria: 'Number of latest releases per feed', saveLimit: 'Save', limitSaved: 'Display limit saved.', limitInvalid: 'Choose a whole number from 1 to 500 per feed.', showingCount: 'Showing {shown} of {total} entries',
     manageEyebrow: 'MANAGE SOURCES', yourFeeds: 'Your feeds', sortLabel: 'Sort feeds', sortNameAsc: 'Name A–Z', sortNameDesc: 'Name Z–A', sortNewest: 'Recently added', sortOldest: 'First added',
-    addHeading: 'Add a feed', appNameLabel: 'Application name', appNamePlaceholder: 'e.g. Nextcloud', feedUrlLabel: 'RSS or Atom URL', addFeed: 'Add feed', oneFeedHeading: 'One feed for everything.', oneFeedDescription: 'Subscribe to the combined RSS feed in your reader. New entries appear after the next check.', rssOpenLink: 'Open combined RSS feed →', signalHeading: 'Signal notifications', signalEnabled: 'Signal is configured. New releases are sent as messages.', signalDisabled: 'Signal is not configured. Set it up in the server configuration.',
-    footerTagline: 'Open source in view.', rssSubscribe: 'Subscribe to RSS ↗', unlockHeading: 'Unlock management', tokenHelp: 'Enter the admin token from the server configuration.', tokenLabel: 'Admin token', cancel: 'Cancel', continue: 'Continue',
+    addHeading: 'Add a feed', appNameLabel: 'Application name', appNamePlaceholder: 'e.g. Nextcloud', feedUrlLabel: 'RSS or Atom URL', addFeed: 'Add feed', oneFeedHeading: 'One feed for everything.', oneFeedDescription: 'Subscribe to the combined RSS feed in your reader. New entries appear after the next check.', rssOpenLink: 'Copy combined RSS feed link ⧉', signalHeading: 'Signal notifications', signalEnabled: 'Signal is configured. New releases are sent as messages.', signalDisabled: 'Signal is not configured. Set it up in the server configuration.',
+    footerTagline: 'Open source in view.', rssSubscribe: 'Copy RSS link ⧉', unlockHeading: 'Unlock management', tokenHelp: 'Enter the admin token from the server configuration.', tokenLabel: 'Admin token', cancel: 'Cancel', continue: 'Continue',
     entrySingular: 'entry', entryPlural: 'entries', noMatches: 'No matching releases', noFeeds: 'No feeds configured yet', trySearch: 'Try another search term or filter.', addFirst: 'Add your first release feed below.', openOriginal: 'Open original release', noFeedsList: 'No feeds yet.', errorPrefix: 'Error', pausedStatus: 'Paused', lastChecked: 'Last checked: {date}', firstCheck: 'First check in progress…', pause: 'Pause', activate: 'Activate', rename: 'Rename', remove: 'Remove', removeConfirm: 'Remove feed “{name}” and its entries?', removed: 'Feed removed.', refreshStarted: 'Refresh started.', feedAdded: 'Feed added. The first check is running.', checkEvery: 'Checks every {minutes} minutes', loadFailed: 'Could not load data.',
     apiUnauthorized: 'Admin token missing or incorrect', apiInvalidFeed: 'Name and a valid HTTP(S) feed URL are required', apiDuplicate: 'Feed already exists', apiRefreshRunning: 'A refresh is already in progress', apiNotFound: 'Not found', apiFeedNotFound: 'Feed not found', apiNameMissing: 'Name is required', apiBodySize: 'Invalid request size'
   },
   de: {
-    homeLabel: 'RSSonar Startseite', monitorLabel: 'Feed-Monitor', themeLabel: 'Design', themeSystem: 'System', themeLight: 'Hell', themeDark: 'Dunkel', languageLabel: 'Sprache', rssOpenLabel: 'Gesammelten RSS-Feed öffnen', rssFeedLabel: 'RSS-Feed',
+    homeLabel: 'RSSonar Startseite', monitorLabel: 'Feed-Monitor', themeLabel: 'Design', themeSystem: 'System', themeLight: 'Hell', themeDark: 'Dunkel', languageLabel: 'Sprache', rssOpenLabel: 'Link zum gemeinsamen RSS-Feed kopieren', rssFeedLabel: 'RSS-Link kopieren', feedCopied: 'RSS-Feed-Link kopiert.', copyFeedManually: 'Diesen RSS-Feed-Link kopieren:',
     heroEyebrow: 'DEIN OPEN-SOURCE-UPDATE', heroLineOne: 'Alles Neue.', heroLineTwo: 'Ein Blick.', heroDescription: 'Die neuesten Releases deiner Anwendungen, gesammelt aus ihren RSS- und Atom-Feeds. Direkt zur Originalmeldung auf GitHub oder Codeberg.', viewReleases: 'Releases ansehen', refreshNow: 'Jetzt aktualisieren', overviewLabel: 'ÜBERSICHT', activeFeeds: 'aktive Feeds', trackedReleases: 'erfasste Releases',
     latestEyebrow: 'AKTUELLE MELDUNGEN', releaseStream: 'Release-Stream', searchPlaceholder: 'Releases durchsuchen', projectLabel: 'Projekt', filterLabel: 'Nach Projekt filtern', allProjects: 'Alle Projekte',
     limitLabel: 'Neueste pro Feed', limitAria: 'Anzahl der neuesten Releases pro Feed', saveLimit: 'Speichern', limitSaved: 'Anzeigelimit gespeichert.', limitInvalid: 'Bitte eine ganze Zahl von 1 bis 500 pro Feed wählen.', showingCount: '{shown} von {total} Einträgen',
     manageEyebrow: 'QUELLEN VERWALTEN', yourFeeds: 'Deine Feeds', sortLabel: 'Feeds sortieren', sortNameAsc: 'Name A–Z', sortNameDesc: 'Name Z–A', sortNewest: 'Zuletzt hinzugefügt', sortOldest: 'Zuerst hinzugefügt',
-    addHeading: 'Neuen Feed hinzufügen', appNameLabel: 'Anwendungsname', appNamePlaceholder: 'z. B. Nextcloud', feedUrlLabel: 'RSS- oder Atom-URL', addFeed: 'Feed hinzufügen', oneFeedHeading: 'Ein Feed für alles.', oneFeedDescription: 'Abonniere den gemeinsamen RSS-Feed in deinem Reader. Neue Einträge erscheinen hier nach der nächsten Prüfung.', rssOpenLink: 'Gesammelten RSS-Feed öffnen →', signalHeading: 'Signal-Benachrichtigungen', signalEnabled: 'Signal ist eingerichtet. Neue Releases werden als Nachricht versendet.', signalDisabled: 'Signal ist nicht eingerichtet. Die Einrichtung erfolgt über die Server-Konfiguration.',
-    footerTagline: 'Open Source im Blick.', rssSubscribe: 'RSS abonnieren ↗', unlockHeading: 'Verwaltung freischalten', tokenHelp: 'Gib den Admin-Token aus der Server-Konfiguration ein.', tokenLabel: 'Admin-Token', cancel: 'Abbrechen', continue: 'Weiter',
+    addHeading: 'Neuen Feed hinzufügen', appNameLabel: 'Anwendungsname', appNamePlaceholder: 'z. B. Nextcloud', feedUrlLabel: 'RSS- oder Atom-URL', addFeed: 'Feed hinzufügen', oneFeedHeading: 'Ein Feed für alles.', oneFeedDescription: 'Abonniere den gemeinsamen RSS-Feed in deinem Reader. Neue Einträge erscheinen hier nach der nächsten Prüfung.', rssOpenLink: 'Link zum gemeinsamen RSS-Feed kopieren ⧉', signalHeading: 'Signal-Benachrichtigungen', signalEnabled: 'Signal ist eingerichtet. Neue Releases werden als Nachricht versendet.', signalDisabled: 'Signal ist nicht eingerichtet. Die Einrichtung erfolgt über die Server-Konfiguration.',
+    footerTagline: 'Open Source im Blick.', rssSubscribe: 'RSS-Link kopieren ⧉', unlockHeading: 'Verwaltung freischalten', tokenHelp: 'Gib den Admin-Token aus der Server-Konfiguration ein.', tokenLabel: 'Admin-Token', cancel: 'Abbrechen', continue: 'Weiter',
     entrySingular: 'Eintrag', entryPlural: 'Einträge', noMatches: 'Keine passenden Releases', noFeeds: 'Noch keine Feeds eingerichtet', trySearch: 'Versuche einen anderen Suchbegriff oder Filter.', addFirst: 'Füge unten deinen ersten Release-Feed hinzu.', openOriginal: 'Originalmeldung öffnen', noFeedsList: 'Noch keine Feeds vorhanden.', errorPrefix: 'Fehler', pausedStatus: 'Pausiert', lastChecked: 'Zuletzt geprüft: {date}', firstCheck: 'Erste Prüfung läuft …', pause: 'Pausieren', activate: 'Aktivieren', rename: 'Umbenennen', remove: 'Entfernen', removeConfirm: 'Feed „{name}“ und seine Einträge entfernen?', removed: 'Feed entfernt.', refreshStarted: 'Aktualisierung gestartet.', feedAdded: 'Feed hinzugefügt. Die erste Prüfung läuft.', checkEvery: 'Prüfung alle {minutes} Minuten', loadFailed: 'Daten konnten nicht geladen werden.',
     apiUnauthorized: 'Admin-Token fehlt oder ist falsch', apiInvalidFeed: 'Name und gültige HTTP(S)-Feed-URL erforderlich', apiDuplicate: 'Feed ist bereits vorhanden', apiRefreshRunning: 'Aktualisierung läuft bereits', apiNotFound: 'Nicht gefunden', apiFeedNotFound: 'Feed nicht gefunden', apiNameMissing: 'Name fehlt', apiBodySize: 'Ungültige Anfragegröße'
   }
@@ -47,7 +47,8 @@ let theme = ['system', 'light', 'dark'].includes(localStorage.getItem('rssonar-t
 let feedSort = sortChoices.has(localStorage.getItem('rssonar-feed-sort')) ? localStorage.getItem('rssonar-feed-sort') : 'name-asc';
 const storedLimit = Number(localStorage.getItem('rssonar-release-limit'));
 let releaseLimit = Number.isInteger(storedLimit) && storedLimit >= 1 && storedLimit <= 500 ? storedLimit : 20;
-let snapshot = { feeds: [], releases: [], interval_minutes: 15, signal_enabled: false };
+let snapshot = { feeds: [], releases: [], interval_minutes: 15, signal_enabled: false, public_feed_url: '' };
+let stateLoaded = false;
 let token = sessionStorage.getItem('rssonar-token') || '';
 let pendingAction = null;
 const colorScheme = window.matchMedia('(prefers-color-scheme: dark)');
@@ -69,6 +70,41 @@ function toast(message) {
   box.classList.add('show');
   clearTimeout(toast.timer);
   toast.timer = setTimeout(() => box.classList.remove('show'), 4500);
+}
+
+function publicFeedUrl() {
+  return snapshot.public_feed_url || new URL('/rss.xml', window.location.href).href;
+}
+
+async function copyFeedUrl() {
+  if (!stateLoaded) await load();
+  const url = publicFeedUrl();
+  try {
+    if (navigator.clipboard?.writeText) {
+      await navigator.clipboard.writeText(url);
+      toast(t('feedCopied'));
+      return;
+    }
+  } catch (_) {
+    // The Clipboard API may be unavailable on an HTTP server address.
+  }
+  const field = document.createElement('textarea');
+  field.value = url;
+  field.readOnly = true;
+  field.style.position = 'fixed';
+  field.style.opacity = '0';
+  document.body.append(field);
+  let copied = false;
+  try {
+    field.select();
+    copied = typeof document.execCommand === 'function' && document.execCommand('copy');
+  } catch (_) {
+    // Leave the URL visible for manual copying if the fallback is blocked too.
+  } finally {
+    field.remove();
+  }
+  if (copied) toast(t('feedCopied'));
+  else window.prompt(t('copyFeedManually'), url);
 }
 
 function applyTheme() {
@@ -257,6 +293,7 @@ async function load() {
     const response = await fetch('/api/state', { cache: 'no-store' });
     if (!response.ok) throw new Error(t('loadFailed'));
     snapshot = await response.json();
+    stateLoaded = true;
     renderStatus();
     renderFeeds();
     renderReleases();
@@ -264,6 +301,7 @@ async function load() {
 }
 
 $('#search').addEventListener('input', renderReleases);
+document.querySelectorAll('.copy-rss-link').forEach(button => button.addEventListener('click', copyFeedUrl));
 $('#filter').addEventListener('change', renderReleases);
 $('#release-limit').value = releaseLimit;
 $('#save-limit').addEventListener('click', () => {

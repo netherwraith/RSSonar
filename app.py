@@ -29,6 +29,7 @@ SIGNAL_URL = os.environ.get("SIGNAL_API_URL", "").rstrip("/")
 SIGNAL_NUMBER = os.environ.get("SIGNAL_NUMBER", "")
 SIGNAL_RECIPIENTS = [x.strip() for x in os.environ.get("SIGNAL_RECIPIENTS", "").split(",") if x.strip()]
 PUBLIC_URL = os.environ.get("PUBLIC_URL", "").rstrip("/")
+PUBLIC_FEED_URL = os.environ.get("PUBLIC_FEED_URL", "").strip()
 lock = threading.RLock()
 poll_lock = threading.Lock()
 
@@ -292,6 +293,7 @@ class Handler(BaseHTTPRequestHandler):
             with lock:
                 return self.reply(200, {"feeds": state["feeds"], "releases": dashboard_releases(),
                                         "release_count": len(state["releases"]),
+                                        "public_feed_url": PUBLIC_FEED_URL if valid_url(PUBLIC_FEED_URL) else "",
                                         "signal_enabled": bool(SIGNAL_URL and SIGNAL_NUMBER and SIGNAL_RECIPIENTS),
                                         "interval_minutes": INTERVAL // 60})
         if path == "/rss.xml":

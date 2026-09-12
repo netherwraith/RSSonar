@@ -12,7 +12,7 @@
 - Automatische Prüfung alle 15 Minuten (konfigurierbar) sowie manuelle Aktualisierung.
 - Releases nach Anwendung filtern und durchsuchen. Die Anzahl der neuesten angezeigten Treffer ist **pro Feed** wählbar und speicherbar (1–500; Standard 20). Bei 5 und 14 Feeds erscheinen bis zu 70 Releases in einem chronologischen Stream. Jeder Eintrag führt zur Original-URL des Feeds, etwa zu GitHub oder Codeberg.
 - Zwischen hellem, dunklem und System-Design sowie Englisch (Standard) und Deutsch umschalten. Anzeigeeinstellungen werden im Browser gespeichert.
-- Zusammengefasster RSS-2.0-Feed unter `/rss.xml`.
+- Den vollständigen Link zum gemeinsamen RSS-2.0-Feed per Klick kopieren. Der Feed bleibt unter `/rss.xml` erreichbar; die Schaltflächen laden ihn nicht herunter.
 - Deduplizierung über Feed und GUID; bereits gespeicherte Einträge überstehen Neustarts.
 - Optionaler Signal-Versand über eine bereits vorhandene [signal-cli-rest-api](https://github.com/bbernhard/signal-cli-rest-api). RSSonar startet keinen Signal-Dienst.
 - Keine Python-Pakete, Datenbank oder Build-Schritte nötig; Python 3.9+ genügt.
@@ -34,6 +34,8 @@ docker compose up -d --build
 
 Die Oberfläche ist unter <http://localhost:8765> erreichbar. Beim ersten Hinzufügen oder manuellen Aktualisieren fragt sie nach dem Admin-Token. Er bleibt nur für den aktuellen Browser-Tab in `sessionStorage`. Die Webseite und `/rss.xml` sind ohne Token lesbar. Daten liegen in `./data/state.json`; dieses Verzeichnis sichern, wenn die Feed-Liste und Historie erhalten bleiben sollen.
 
+Ein Klick auf **RSS-Link kopieren** kopiert die vollständige Feed-Adresse. Ohne `PUBLIC_FEED_URL` verwendet RSSonar die aktuell im Browser geöffnete Adresse mit `/rss.xml`. Wenn der Browser bei HTTP-Adressen die Clipboard-API sperrt, versucht RSSonar eine kompatible Kopiermethode und zeigt andernfalls den Link zum manuellen Kopieren an. Die Feed-Adresse wird nicht im Browser-Speicher abgelegt.
+
 Von einem anderen Gerät aus `http://SERVER_IP:8765` öffnen und in `.env` `PUBLIC_URL=http://SERVER_IP:8765` setzen (oder die HTTPS-Domain verwenden). Docker veröffentlicht Port `8765` standardmäßig auf allen Netzwerkschnittstellen des Servers (`RSSONAR_BIND=0.0.0.0`). Alternativ kann `RSSONAR_BIND` auf die tatsächliche LAN-IP des Servers gesetzt werden. Für direkten Zugriff muss die Firewall den Port zulassen; für öffentlichen Zugriff empfiehlt sich ein HTTPS-Reverse-Proxy.
 
 ## Bestehenden Server aktualisieren
@@ -44,11 +46,9 @@ Im geklonten Repository auf dem Server ausführen:
 cd /pfad/zu/rssonar
 git pull --ff-only
 docker compose up -d --build
-docker compose ps
-docker compose logs --tail=50 rssonar
 ```
 
-Vor dem Neustart `.env` prüfen: Ein bisheriger Eintrag `RSSONAR_BIND=127.0.0.1` **überschreibt den neuen Standardwert**. Ihn auf `RSSONAR_BIND=0.0.0.0` oder die tatsächliche Server-IP ändern und `PUBLIC_URL` auf die von außen erreichbare URL setzen. Den vorhandenen `ADMIN_TOKEN` und das Verzeichnis `./data` beibehalten; `docker compose up -d --build` baut das Image neu und erstellt den Dienst bei Bedarf erneut, ohne die eingebundenen Daten zu löschen. Bei einer Installation aus dem Quellarchiv statt einem Git-Klon die Anwendungsdateien aus dem neuen Archiv ersetzen, `.env` und `./data` behalten und anschließend denselben Compose-Befehl ausführen.
+Vor dem Neustart `.env` prüfen: Ein bisheriger Eintrag `RSSONAR_BIND=127.0.0.1` **überschreibt den neuen Standardwert**. Ihn auf `RSSONAR_BIND=0.0.0.0` oder die tatsächliche Server-IP ändern und `PUBLIC_URL` auf die von außen erreichbare URL setzen. Bei einem Reverse Proxy zusätzlich `PUBLIC_FEED_URL` mit der vollständigen externen `/rss.xml`-Adresse eintragen. Den vorhandenen `ADMIN_TOKEN` und das Verzeichnis `./data` beibehalten; `docker compose up -d --build` baut das Image neu und erstellt den Dienst bei Bedarf erneut, ohne die eingebundenen Daten zu löschen. Bei einer Installation aus dem Quellarchiv statt einem Git-Klon die Anwendungsdateien aus dem neuen Archiv ersetzen, `.env` und `./data` behalten und anschließend denselben Compose-Befehl ausführen.
 
 Ohne Docker:
 
@@ -60,7 +60,14 @@ Für öffentlich erreichbare Installationen `PUBLIC_URL` auf die tatsächliche H
 
 ## Reverse Proxy
 
-RSSonar hört im Container auf Port `8765` und soll unter einer eigenen HTTPS-Domain wie `https://releases.example.org` am URL-Pfad `/` erreichbar sein. Die Oberfläche ruft `/api/state` auf; der kombinierte Feed liegt unter `/rss.xml`. Beide Pfade müssen unverändert zum selben Backend weitergeleitet werden. In `.env` `PUBLIC_URL=https://releases.example.org` setzen. Bei einem Proxy auf demselben Host ist das Ziel `http://127.0.0.1:8765` weiterhin erreichbar. Läuft der Proxy selbst in einem Container, müssen Proxy und RSSonar ein gemeinsames Docker-Netzwerk nutzen; dort lautet das Ziel `http://rssonar:8765`. Die Standardeinstellung `RSSONAR_BIND=0.0.0.0` veröffentlicht den Port auch auf den anderen Server-Schnittstellen; bei Bedarf Zugriff per Firewall beschränken oder in `.env` eine bestimmte Schnittstellen-IP angeben.
+RSSonar hört im Container auf Port `8765` und soll unter einer eigenen HTTPS-Domain wie `https://releases.example.org` am URL-Pfad `/` erreichbar sein. Die Oberfläche ruft `/api/state` auf; der kombinierte Feed liegt unter `/rss.xml`. Beide Pfade müssen unverändert zum selben Backend weitergeleitet werden. In `.env` `PUBLIC_URL` auf die öffentliche Webseitenadresse für die RSS-Kanal-Metadaten setzen und mit `PUBLIC_FEED_URL` die **vollständige** externe Adresse festlegen, die die Schaltflächen kopieren:
+
+```dotenv
+PUBLIC_URL=https://releases.example.org
+PUBLIC_FEED_URL=https://releases.example.org/rss.xml
+```
+
+`PUBLIC_FEED_URL` überschreibt die aus der Browseradresse abgeleitete Feed-URL. Der Wert muss eine absolute HTTP(S)-Adresse sein, die RSS-Reader erreichen können. Bei bestehenden Installationen den Eintrag in der vorhandenen `.env` ergänzen; die `.env.example` nicht darüberkopieren, sonst geht unter anderem der Admin-Token verloren. Bei einem Proxy auf demselben Host ist `http://127.0.0.1:8765` als Ziel weiterhin erreichbar. Läuft der Proxy selbst in einem Container, müssen Proxy und RSSonar ein gemeinsames Docker-Netzwerk nutzen; dort lautet das Ziel `http://rssonar:8765`. Die Standardeinstellung `RSSONAR_BIND=0.0.0.0` veröffentlicht den Port auch auf den anderen Server-Schnittstellen; bei Bedarf Zugriff per Firewall beschränken oder in `.env` eine bestimmte Schnittstellen-IP angeben.
 
 - **[Pangolin](https://docs.pangolin.net/manage/resources/public/targets):** Eine öffentliche HTTP-Ressource für die Domain anlegen und einen von der Pangolin-Site erreichbaren Target-Host mit Port `8765` eintragen. `127.0.0.1` meint innerhalb eines Containers dessen eigenen Netzwerk-Namespace, nicht automatisch den RSSonar-Host.
 - **[Traefik](https://doc.traefik.io/traefik/providers/docker/):** Beide Container in dasselbe Docker-Netzwerk aufnehmen. Am RSSonar-Dienst einen Router mit ``Host(`releases.example.org`)`` und den Service-Port `8765` konfigurieren; TLS über den vorhandenen Traefik-Entry-Point aktivieren.

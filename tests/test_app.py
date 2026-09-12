@@ -83,6 +83,18 @@ class RSSonarTests(unittest.TestCase):
         self.assertEqual(len(data["releases"]), 501)
         self.assertEqual(data["releases"][-1]["feed_id"], "quiet")
 
+    def test_public_feed_url_is_exposed_only_when_valid(self):
+        handler = object.__new__(self.app.Handler)
+        handler.path = "/api/state"
+        responses = []
+        handler.reply = lambda status, data: responses.append((status, data))
+        with patch.object(self.app, "PUBLIC_FEED_URL", "https://releases.example.org/rss.xml"):
+            handler.do_GET()
+        self.assertEqual(responses[-1][1]["public_feed_url"], "https://releases.example.org/rss.xml")
+        with patch.object(self.app, "PUBLIC_FEED_URL", "javascript:alert(1)"):
+            handler.do_GET()
+        self.assertEqual(responses[-1][1]["public_feed_url"], "")
+
     def test_codeberg_release_page_is_normalized_on_add_and_poll(self):
         page = "https://codeberg.org/forgejo/forgejo/releases"
         feed_url = page + ".rss"

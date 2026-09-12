@@ -7,6 +7,7 @@ services:
     environment:
       ADMIN_TOKEN: ${ADMIN_TOKEN:?Set ADMIN_TOKEN in .env}
       PUBLIC_URL: ${PUBLIC_URL:-http://localhost:8765}
+      PUBLIC_FEED_URL: ${PUBLIC_FEED_URL:-}
       POLL_MINUTES: ${POLL_MINUTES:-15}
       SIGNAL_API_URL: ${SIGNAL_API_URL:-}
       SIGNAL_NUMBER: ${SIGNAL_NUMBER:-}

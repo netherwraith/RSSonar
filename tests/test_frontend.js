@@ -18,4 +18,44 @@ const releases = [
 ];
 assert.deepEqual(Array.from(takeLatestPerFeed(releases, 2), x => x.title), ['b3', 'b2', 'q2', 'q1']);
 assert.deepEqual(Array.from(takeLatestPerFeed(releases, 1), x => x.title), ['b3', 'q2']);
-console.log('Latest releases are limited per feed.');
+
+const html = fs.readFileSync(path.join(__dirname, '../static/index.html'), 'utf8');
+assert.doesNotMatch(html, /href="\/rss\.xml"/);
+assert.equal((html.match(/class="[^"]*copy-rss-link/g) || []).length, 3);
+
+const urlStart = source.indexOf('function publicFeedUrl()');
+const urlEnd = source.indexOf('\nfunction applyTheme()', urlStart);
+assert.ok(urlStart >= 0 && urlEnd > urlStart, 'feed URL and copy functions are present');
+const copied = [];
+const messages = [];
+const env = {
+  stateLoaded: true,
+  snapshot: { public_feed_url: 'https://releases.example.org/rss.xml' },
+  window: { location: { href: 'http://192.0.2.1:8765/' }, prompt: (...args) => messages.push(args) },
+  navigator: { clipboard: { writeText: async value => copied.push(value) } },
+  URL,
+  toast: message => messages.push(message),
+  t: key => key,
+};
+const { publicFeedUrl, copyFeedUrl } = vm.runInNewContext(
+  source.slice(urlStart, urlEnd) + '\n({ publicFeedUrl, copyFeedUrl })', env
+);
+
+(async () => {
+  assert.equal(publicFeedUrl(), 'https://releases.example.org/rss.xml');
+  await copyFeedUrl();
+  assert.deepEqual(copied, ['https://releases.example.org/rss.xml']);
+  assert.equal(messages.at(-1), 'feedCopied');
+
+  env.snapshot.public_feed_url = '';
+  assert.equal(publicFeedUrl(), 'http://192.0.2.1:8765/rss.xml');
+  env.navigator.clipboard = undefined;
+  env.document = {
+    body: { append() {} },
+    createElement: () => ({ style: {}, select() {}, remove() {} }),
+    execCommand: command => command === 'copy',
+  };
+  await copyFeedUrl();
+  assert.equal(messages.at(-1), 'feedCopied');
+  console.log('Release limits and RSS clipboard actions pass.');
+})().catch(error => { console.error(error); process.exitCode = 1; });
