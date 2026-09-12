@@ -19,6 +19,8 @@
 ## Schnellstart mit Docker Compose
 
 ```sh
+git clone https://github.com/netherwraith/rssonar.git
+cd rssonar
 cp .env.example .env
 python3 -c 'import secrets; print(secrets.token_urlsafe(32))'
 ```
