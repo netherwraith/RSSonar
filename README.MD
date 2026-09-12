@@ -24,10 +24,10 @@
 git clone https://github.com/netherwraith/rssonar.git
 cd rssonar
 cp .env.example .env
-python3 -c 'import secrets; print(secrets.token_urlsafe(32))'
+openssl rand -hex 32
 ```
 
-Put the generated value into `.env` as `ADMIN_TOKEN`, then start RSSonar:
+Put the generated 64-character hex value into `.env` as `ADMIN_TOKEN`, then start RSSonar:
 
 ```sh
 docker compose up -d --build

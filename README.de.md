@@ -24,10 +24,10 @@
 git clone https://github.com/netherwraith/rssonar.git
 cd rssonar
 cp .env.example .env
-python3 -c 'import secrets; print(secrets.token_urlsafe(32))'
+openssl rand -hex 32
 ```
 
-Den ausgegebenen Wert in `.env` als `ADMIN_TOKEN` eintragen. Anschließend:
+Den ausgegebenen 64-stelligen Hex-Wert in `.env` als `ADMIN_TOKEN` eintragen. Anschließend:
 
 ```sh
 docker compose up -d --build
