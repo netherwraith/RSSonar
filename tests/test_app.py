@@ -261,6 +261,38 @@ class RSSonarTests(unittest.TestCase):
         self.assertEqual(self.app.state["feeds"], [self.feed])
         self.assertEqual(len(self.app.state["releases"]), 1)
 
+    def test_opml_export_includes_paused_feeds_and_requires_admin_token(self):
+        self.app.state["feeds"] = [self.feed, {
+            "id": "paused", "name": "Garage & Tools", "url": "https://codeberg.org/o/garage/releases.rss",
+            "enabled": False,
+        }]
+        handler = object.__new__(self.app.Handler)
+        handler.path = "/api/feeds/export"
+        handler.authorized = lambda: False
+        responses = []
+        handler.reply = lambda status, data: responses.append((status, data))
+        handler.do_GET()
+        self.assertEqual(responses[-1][0], 401)
+
+        handler.authorized = lambda: True
+        handler.send_response = lambda status: responses.append(("status", status))
+        headers = {}
+        handler.send_header = lambda name, value: headers.__setitem__(name, value)
+        handler.end_headers = lambda: None
+        handler.wfile = io.BytesIO()
+        handler.do_GET()
+        self.assertIn(("status", 200), responses)
+        self.assertEqual(headers["Content-Disposition"], 'attachment; filename="rssonar-feeds.opml"')
+        self.assertEqual(headers["Cache-Control"], "no-store")
+        self.assertEqual(headers["Content-Length"], str(len(handler.wfile.getvalue())))
+        root = ElementTree.fromstring(handler.wfile.getvalue())
+        outlines = root.findall("./body/outline")
+        self.assertEqual([item.attrib["title"] for item in outlines], ["Test App", "Garage & Tools"])
+        self.assertEqual([item.attrib["xmlUrl"] for item in outlines],
+                         [self.feed["url"], "https://codeberg.org/o/garage/releases.rss"])
+        parsed, invalid, duplicates = self.app.parse_opml(handler.wfile.getvalue().decode("utf-8"))
+        self.assertEqual((len(parsed), invalid, duplicates), (2, 0, 0))
+
 
 if __name__ == "__main__":
     unittest.main()

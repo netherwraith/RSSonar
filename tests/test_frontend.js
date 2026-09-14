@@ -23,6 +23,7 @@ const html = fs.readFileSync(path.join(__dirname, '../static/index.html'), 'utf8
 assert.doesNotMatch(html, /href="\/rss\.xml"/);
 assert.equal((html.match(/class="[^"]*copy-rss-link/g) || []).length, 3);
 assert.match(html, /id="opml-form"/);
+assert.match(html, /id="opml-export"/);
 assert.match(html, /value="merge"/);
 assert.match(html, /value="replace"/);
 
@@ -60,7 +61,30 @@ const { publicFeedUrl, copyFeedUrl } = vm.runInNewContext(
   };
   await copyFeedUrl();
   assert.equal(messages.at(-1), 'feedCopied');
+  const exportStart = source.indexOf("$('#opml-export').addEventListener(");
   const importStart = source.indexOf("$('#opml-form').addEventListener(");
+  assert.ok(exportStart >= 0 && importStart > exportStart, 'OPML export handler is present');
+  let exportHandler;
+  let exportAction;
+  const download = { clicked: false, removed: false, click() { this.clicked = true; }, remove() { this.removed = true; } };
+  const exportCalls = [];
+  vm.runInNewContext(source.slice(exportStart, importStart), {
+    $: () => ({ addEventListener: (_event, fn) => { exportHandler = fn; } }),
+    withAdmin: action => { exportAction = action(); },
+    fetch: async (endpoint, options) => {
+      exportCalls.push([endpoint, options.headers['X-Admin-Token']]);
+      return { ok: true, blob: async () => 'opml-file' };
+    },
+    token: 'example-admin-token',
+    URL: { createObjectURL: () => 'blob:export', revokeObjectURL: () => {} },
+    document: { body: { append() {} }, createElement: () => download },
+    setTimeout: () => {},
+  });
+  exportHandler();
+  await exportAction;
+  assert.deepEqual(exportCalls, [['/api/feeds/export', 'example-admin-token']]);
+  assert.equal(download.download, 'rssonar-feeds.opml');
+  assert.equal(download.clicked && download.removed, true);
   const importEnd = source.indexOf("\n$('#token-form')", importStart);
   assert.ok(importStart >= 0 && importEnd > importStart, 'OPML form handler is present');
   const calls = [];

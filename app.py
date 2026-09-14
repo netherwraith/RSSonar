@@ -310,6 +310,22 @@ def rss_xml():
     return ("".join(parts) + "</channel></rss>").encode()
 
 
+def opml_xml():
+    """Export every configured feed, including paused ones, as portable OPML."""
+    with lock:
+        feeds = [dict(feed) for feed in state["feeds"]]
+    root = ET.Element("opml", version="2.0")
+    head = ET.SubElement(root, "head")
+    ET.SubElement(head, "title").text = "RSSonar release feeds"
+    body = ET.SubElement(root, "body")
+    for feed in feeds:
+        ET.SubElement(body, "outline", {
+            "text": feed["name"], "title": feed["name"], "type": "rss",
+            "xmlUrl": feed["url"],
+        })
+    return ET.tostring(root, encoding="utf-8", xml_declaration=True)
+
+
 def dashboard_releases():
     """Keep up to 500 entries per feed so one busy feed cannot hide another."""
     counts = {}
@@ -361,6 +377,18 @@ class Handler(BaseHTTPRequestHandler):
                                         "interval_minutes": INTERVAL // 60})
         if path == "/rss.xml":
             return self.reply(200, rss_xml(), "application/rss+xml; charset=utf-8")
+        if path == "/api/feeds/export":
+            if not self.authorized():
+                return self.reply(401, {"error": "Admin token missing or incorrect"})
+            data = opml_xml()
+            self.send_response(200)
+            self.send_header("Content-Type", "application/xml; charset=utf-8")
+            self.send_header("Content-Disposition", 'attachment; filename="rssonar-feeds.opml"')
+            self.send_header("Content-Length", str(len(data)))
+            self.send_header("Cache-Control", "no-store")
+            self.send_header("X-Content-Type-Options", "nosniff")
+            self.end_headers()
+            return self.wfile.write(data)
         self.reply(404, {"error": "Not found"})
 
     def do_POST(self):

@@ -10,6 +10,7 @@
 
 - Add, rename, pause, and remove feeds in the web interface. Sort feeds by name (A–Z by default, or Z–A) or by when they were added.
 - Import subscriptions from a `.opml` file, with a preview and explicit confirmation before merging or replacing the feed list.
+- Export the entire configured feed list as an OPML file, including paused feeds.
 - Check feeds every 15 minutes by default, with a manual refresh option.
 - Search releases and filter by application. Set and save how many of the latest matching releases to display **per feed** (1–500; 20 by default). With 5 selected and 14 feeds, up to 70 releases appear in one chronological stream. Each entry links to the original release URL from its feed, such as a GitHub or Codeberg release page.
 - Switch between light, dark, and system themes and between English (default) and German. Display preferences are saved in the browser.
@@ -93,12 +94,16 @@ A GitHub release feed has the form `https://github.com/OWNER/REPO/releases.atom`
 
 ## Importing OPML
 
-Under **Manage sources → Import OPML**, choose an exported `.opml` file and an import mode, then click **Preview import**. RSSonar reads feed URLs from nested OPML folders and shows how many are valid, already configured, or duplicated. The admin token is required; no changes are made until you confirm the preview.
+Under **Manage sources → Import & export OPML**, choose an exported `.opml` file and an import mode, then click **Preview import**. RSSonar reads feed URLs from nested OPML folders and shows how many are valid, already configured, or duplicated. The admin token is required; no changes are made until you confirm the preview.
 
 - **Add missing feeds** keeps all existing feeds and release history. Feed URLs already present are skipped; imported feed names come from the OPML `title` or `text` attribute.
 - **Replace all feeds** replaces the entire configured feed list and **deletes its stored release history**, including pending notifications. The confirmation shows both counts. Back up `./data` first if you may need to undo a replacement.
 
 Only HTTP(S) feed URLs are imported; invalid entries are counted and skipped. Empty or malformed OPML files are rejected without changing existing data. The file is limited to 1 MiB and 500 unique feeds; a merge cannot bring the total above 500. The OPML content is processed for this request and is not stored. RSSonar checks newly imported feeds in the background; OPML does not prove that a URL is a release feed, so check the feed status after import. If a reverse proxy rejects the upload, allow request bodies up to 2 MiB for the import API.
+
+## Exporting OPML
+
+Under **Manage sources → Import & export OPML**, click **Export all feeds · OPML ↓** to download `rssonar-feeds.opml`. The file contains every configured feed in its saved order, including paused feeds. It contains feed names and URLs, but no release history, admin token, or other secrets. The export requires the admin token and is generated from current state on each request; the server does not store another copy. You can import the file back into RSSonar or another OPML-compatible reader. Through a reverse proxy, forward `/api/feeds/export` with the other `/api/` routes.
 
 ## Existing Signal API (optional)
 
