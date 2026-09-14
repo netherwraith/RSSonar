@@ -1,5 +1,6 @@
 services:
   rssonar:
+    container_name: rssonar-app
     build: .
     restart: unless-stopped
     ports:

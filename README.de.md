@@ -24,17 +24,21 @@
 ```sh
 git clone https://github.com/netherwraith/RSSonar.git
 cd RSSonar
-cp .env.example .env
-openssl rand -hex 32
+(
+  umask 077
+  RSSONAR_ADMIN_TOKEN=$(openssl rand -hex 32) || exit 1
+  sed "s/^ADMIN_TOKEN=.*/ADMIN_TOKEN=${RSSONAR_ADMIN_TOKEN}/" .env.example > .env || exit 1
+  printf 'Admin-Token: %s\n' "$RSSONAR_ADMIN_TOKEN"
+)
 ```
 
-Den ausgegebenen 64-stelligen Hex-Wert in `.env` als `ADMIN_TOKEN` eintragen. Anschließend:
+Der erzeugte 64-stellige Hex-Wert wird als `ADMIN_TOKEN` in `.env` geschrieben und zugleich im Terminal ausgegeben. Den angezeigten Wert für die Verwaltung aufbewahren. Diesen Schritt nur bei einer Neuinstallation ausführen: Er überschreibt `.env` und damit auch einen vorhandenen Token. Anschließend:
 
 ```sh
 docker compose up -d --build
 ```
 
-Die Oberfläche ist unter <http://localhost:8765> erreichbar. Beim ersten Hinzufügen oder manuellen Aktualisieren fragt sie nach dem Admin-Token. Er bleibt nur für den aktuellen Browser-Tab in `sessionStorage`. Die Webseite und `/rss.xml` sind ohne Token lesbar. Daten liegen in `./data/state.json`; dieses Verzeichnis sichern, wenn die Feed-Liste und Historie erhalten bleiben sollen.
+Die Oberfläche ist unter <http://localhost:8765> erreichbar. Der Compose-Container heißt `rssonar-app`. Beim ersten Hinzufügen oder manuellen Aktualisieren fragt sie nach dem Admin-Token. Er bleibt nur für den aktuellen Browser-Tab in `sessionStorage`. Die Webseite und `/rss.xml` sind ohne Token lesbar. Daten liegen in `./data/state.json`; dieses Verzeichnis sichern, wenn die Feed-Liste und Historie erhalten bleiben sollen.
 
 Ein Klick auf **RSS-Link kopieren** kopiert die vollständige Feed-Adresse. Ohne `PUBLIC_FEED_URL` verwendet RSSonar die aktuell im Browser geöffnete Adresse mit `/rss.xml`. Wenn der Browser bei HTTP-Adressen die Clipboard-API sperrt, versucht RSSonar eine kompatible Kopiermethode und zeigt andernfalls den Link zum manuellen Kopieren an. Die Feed-Adresse wird nicht im Browser-Speicher abgelegt.
 
@@ -45,7 +49,7 @@ Von einem anderen Gerät aus `http://SERVER_IP:8765` öffnen und in `.env` `PUBL
 Im geklonten Repository auf dem Server ausführen:
 
 ```sh
-cd /pfad/zu/rssonar
+cd /pfad/zu/RSSonar
 git pull --ff-only
 docker compose up -d --build
 ```

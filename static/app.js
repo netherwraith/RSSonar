@@ -2,7 +2,7 @@ const $ = selector => document.querySelector(selector);
 const translations = {
   en: {
     homeLabel: 'RSSonar home', monitorLabel: 'Feed monitor', themeLabel: 'Theme', themeSystem: 'System', themeLight: 'Light', themeDark: 'Dark', languageLabel: 'Language', rssOpenLabel: 'Copy combined RSS feed link', rssFeedLabel: 'Copy RSS link', feedCopied: 'RSS feed link copied.', copyFeedManually: 'Copy this RSS feed link:',
-    heroEyebrow: 'A RELEASE JOURNAL', heroLineOne: 'What changed', heroLineTwo: 'in your software.', heroDescription: 'Follow releases from the projects you use. Each entry takes you straight to the original announcement on GitHub or Codeberg.', viewReleases: 'Browse releases', refreshNow: 'Check for updates', overviewLabel: 'AT A GLANCE', activeFeeds: 'active feeds', trackedReleases: 'tracked releases',
+    heroEyebrow: 'YOUR OPEN-SOURCE UPDATE', heroLineOne: 'All the latest.', heroLineTwo: 'One clear view.', heroDescription: 'The latest releases from your RSS and Atom feeds, collected in one place. Go straight to the original announcement on GitHub or Codeberg.', viewReleases: 'View releases', refreshNow: 'Refresh now', overviewLabel: 'OVERVIEW', activeFeeds: 'active feeds', trackedReleases: 'tracked releases',
     latestEyebrow: 'LATEST UPDATES', releaseStream: 'Release stream', searchPlaceholder: 'Search releases', projectLabel: 'Project', filterLabel: 'Filter by project', allProjects: 'All projects',
     limitLabel: 'Latest per feed', limitAria: 'Number of latest releases per feed', saveLimit: 'Save', limitSaved: 'Display limit saved.', limitInvalid: 'Choose a whole number from 1 to 500 per feed.', showingCount: 'Showing {shown} of {total} entries',
     manageEyebrow: 'MANAGE SOURCES', yourFeeds: 'Your feeds', sortLabel: 'Sort feeds', sortNameAsc: 'Name A–Z', sortNameDesc: 'Name Z–A', sortNewest: 'Recently added', sortOldest: 'First added',
@@ -15,7 +15,7 @@ const translations = {
   },
   de: {
     homeLabel: 'RSSonar Startseite', monitorLabel: 'Feed-Monitor', themeLabel: 'Design', themeSystem: 'System', themeLight: 'Hell', themeDark: 'Dunkel', languageLabel: 'Sprache', rssOpenLabel: 'Link zum gemeinsamen RSS-Feed kopieren', rssFeedLabel: 'RSS-Link kopieren', feedCopied: 'RSS-Feed-Link kopiert.', copyFeedManually: 'Diesen RSS-Feed-Link kopieren:',
-    heroEyebrow: 'DAS RELEASE-JOURNAL', heroLineOne: 'Was sich bei', heroLineTwo: 'deiner Software tut.', heroDescription: 'Verfolge die Releases deiner Projekte. Jeder Eintrag führt direkt zur Originalmeldung auf GitHub oder Codeberg.', viewReleases: 'Releases ansehen', refreshNow: 'Updates prüfen', overviewLabel: 'AUF EINEN BLICK', activeFeeds: 'aktive Feeds', trackedReleases: 'erfasste Releases',
+    heroEyebrow: 'DEIN OPEN-SOURCE-UPDATE', heroLineOne: 'Alles Neue.', heroLineTwo: 'Ein Blick.', heroDescription: 'Die neuesten Releases deiner Anwendungen, gesammelt aus ihren RSS- und Atom-Feeds. Direkt zur Originalmeldung auf GitHub oder Codeberg.', viewReleases: 'Releases ansehen', refreshNow: 'Jetzt aktualisieren', overviewLabel: 'ÜBERSICHT', activeFeeds: 'aktive Feeds', trackedReleases: 'erfasste Releases',
     latestEyebrow: 'AKTUELLE MELDUNGEN', releaseStream: 'Release-Stream', searchPlaceholder: 'Releases durchsuchen', projectLabel: 'Projekt', filterLabel: 'Nach Projekt filtern', allProjects: 'Alle Projekte',
     limitLabel: 'Neueste pro Feed', limitAria: 'Anzahl der neuesten Releases pro Feed', saveLimit: 'Speichern', limitSaved: 'Anzeigelimit gespeichert.', limitInvalid: 'Bitte eine ganze Zahl von 1 bis 500 pro Feed wählen.', showingCount: '{shown} von {total} Einträgen',
     manageEyebrow: 'QUELLEN VERWALTEN', yourFeeds: 'Deine Feeds', sortLabel: 'Feeds sortieren', sortNameAsc: 'Name A–Z', sortNameDesc: 'Name Z–A', sortNewest: 'Zuletzt hinzugefügt', sortOldest: 'Zuerst hinzugefügt',
@@ -126,7 +126,6 @@ async function copyFeedUrl() {
 function applyTheme() {
   document.documentElement.dataset.theme = theme === 'system' ? (colorScheme.matches ? 'dark' : 'light') : theme;
   $('#theme-switch').value = theme;
-  document.querySelector('meta[name="theme-color"]').content = document.documentElement.dataset.theme === 'dark' ? '#263c2d' : '#344c39';
 }
 
 function applyLanguage() {

@@ -24,17 +24,21 @@
 ```sh
 git clone https://github.com/netherwraith/RSSonar.git
 cd RSSonar
-cp .env.example .env
-openssl rand -hex 32
+(
+  umask 077
+  RSSONAR_ADMIN_TOKEN=$(openssl rand -hex 32) || exit 1
+  sed "s/^ADMIN_TOKEN=.*/ADMIN_TOKEN=${RSSONAR_ADMIN_TOKEN}/" .env.example > .env || exit 1
+  printf 'Admin token: %s\n' "$RSSONAR_ADMIN_TOKEN"
+)
 ```
 
-Put the generated 64-character hex value into `.env` as `ADMIN_TOKEN`, then start RSSonar:
+This writes the generated 64-character hex token to `.env` as `ADMIN_TOKEN` and prints it once in the terminal. Save the displayed value for administration. Run this setup only for a new installation: it overwrites `.env` and would replace an existing token. Then start RSSonar:
 
 ```sh
 docker compose up -d --build
 ```
 
-Open <http://localhost:8765>. The interface asks for the admin token when you first add a feed or trigger a manual refresh. It keeps the token in `sessionStorage` for the current browser tab only. The dashboard and `/rss.xml` are readable without a token. Application data lives in `./data/state.json`; back up this directory if you want to preserve the feed list and history.
+Open <http://localhost:8765>. The Compose container is named `rssonar-app`. The interface asks for the admin token when you first add a feed or trigger a manual refresh. It keeps the token in `sessionStorage` for the current browser tab only. The dashboard and `/rss.xml` are readable without a token. Application data lives in `./data/state.json`; back up this directory if you want to preserve the feed list and history.
 
 Click **Copy RSS link** to copy the complete feed URL. Without `PUBLIC_FEED_URL`, RSSonar uses the address currently shown in your browser, followed by `/rss.xml`. On HTTP addresses where the browser blocks the Clipboard API, RSSonar tries a compatibility copy method and offers the URL for manual copying if that also fails. The feed URL itself is not stored in browser storage.
 
