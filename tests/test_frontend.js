@@ -52,6 +52,12 @@ const { publicFeedUrl, copyFeedUrl } = vm.runInNewContext(
   assert.equal(messages.at(-1), 'feedCopied');
 
   env.snapshot.public_feed_url = '';
+  env.window.location.href = 'http://localhost:8765/';
+  await copyFeedUrl();
+  assert.equal(copied.at(-1), 'http://localhost:8765/rss.xml');
+  assert.equal(messages.at(-1), 'feedCopiedLocal');
+
+  env.window.location.href = 'http://192.0.2.1:8765/';
   assert.equal(publicFeedUrl(), 'http://192.0.2.1:8765/rss.xml');
   env.navigator.clipboard = undefined;
   env.document = {

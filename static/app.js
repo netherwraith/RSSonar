@@ -1,7 +1,7 @@
 const $ = selector => document.querySelector(selector);
 const translations = {
   en: {
-    homeLabel: 'RSSonar home', monitorLabel: 'Feed monitor', themeLabel: 'Theme', themeSystem: 'System', themeLight: 'Light', themeDark: 'Dark', languageLabel: 'Language', rssOpenLabel: 'Copy combined RSS feed link', rssFeedLabel: 'Copy RSS link', feedCopied: 'RSS feed link copied.', copyFeedManually: 'Copy this RSS feed link:',
+    homeLabel: 'RSSonar home', monitorLabel: 'Feed monitor', themeLabel: 'Theme', themeSystem: 'System', themeLight: 'Light', themeDark: 'Dark', languageLabel: 'Language', rssOpenLabel: 'Copy combined RSS feed link', rssFeedLabel: 'Copy RSS link', feedCopied: 'RSS feed link copied.', feedCopiedLocal: 'Link copied. localhost works only on this device; set PUBLIC_FEED_URL for other devices.', copyFeedManually: 'Copy this RSS feed link:',
     heroEyebrow: 'YOUR OPEN-SOURCE UPDATE', heroLineOne: 'All the latest.', heroLineTwo: 'One clear view.', heroDescription: 'The latest releases from your RSS and Atom feeds, collected in one place. Go straight to the original announcement on GitHub or Codeberg.', viewReleases: 'View releases', refreshNow: 'Refresh now', overviewLabel: 'OVERVIEW', activeFeeds: 'active feeds', trackedReleases: 'tracked releases',
     latestEyebrow: 'LATEST UPDATES', releaseStream: 'Release stream', searchPlaceholder: 'Search releases', projectLabel: 'Project', filterLabel: 'Filter by project', allProjects: 'All projects',
     limitLabel: 'Latest per feed', limitAria: 'Number of latest releases per feed', saveLimit: 'Save', limitSaved: 'Display limit saved.', limitInvalid: 'Choose a whole number from 1 to 500 per feed.', showingCount: 'Showing {shown} of {total} entries',
@@ -14,7 +14,7 @@ const translations = {
     apiOpmlSelect: 'Choose an OPML file.', apiOpmlTooLarge: 'OPML file exceeds 1 MiB.', apiOpmlDoctype: 'OPML document types and entities are not supported.', apiOpmlInvalidXml: 'Invalid OPML XML.', apiOpmlEncoding: 'Invalid OPML text encoding.', apiOpmlNotFile: 'Not an OPML file (body missing).', apiOpmlNoFeeds: 'OPML contains no valid HTTP(S) feed URLs.', apiOpmlTooMany: 'OPML contains more than 500 feeds.', apiOpmlLimit: 'Import would exceed 500 feeds.', apiOpmlConfirmation: 'Choose an import mode and confirm the import.', apiOpmlRequest: 'Invalid OPML request.', apiOpmlSave: 'Could not save imported feeds.'
   },
   de: {
-    homeLabel: 'RSSonar Startseite', monitorLabel: 'Feed-Monitor', themeLabel: 'Design', themeSystem: 'System', themeLight: 'Hell', themeDark: 'Dunkel', languageLabel: 'Sprache', rssOpenLabel: 'Link zum gemeinsamen RSS-Feed kopieren', rssFeedLabel: 'RSS-Link kopieren', feedCopied: 'RSS-Feed-Link kopiert.', copyFeedManually: 'Diesen RSS-Feed-Link kopieren:',
+    homeLabel: 'RSSonar Startseite', monitorLabel: 'Feed-Monitor', themeLabel: 'Design', themeSystem: 'System', themeLight: 'Hell', themeDark: 'Dunkel', languageLabel: 'Sprache', rssOpenLabel: 'Link zum gemeinsamen RSS-Feed kopieren', rssFeedLabel: 'RSS-Link kopieren', feedCopied: 'RSS-Feed-Link kopiert.', feedCopiedLocal: 'Link kopiert. localhost funktioniert nur auf diesem Gerät; für andere Geräte PUBLIC_FEED_URL setzen.', copyFeedManually: 'Diesen RSS-Feed-Link kopieren:',
     heroEyebrow: 'DEIN OPEN-SOURCE-UPDATE', heroLineOne: 'Alles Neue.', heroLineTwo: 'Ein Blick.', heroDescription: 'Die neuesten Releases deiner Anwendungen, gesammelt aus ihren RSS- und Atom-Feeds. Direkt zur Originalmeldung auf GitHub oder Codeberg.', viewReleases: 'Releases ansehen', refreshNow: 'Jetzt aktualisieren', overviewLabel: 'ÜBERSICHT', activeFeeds: 'aktive Feeds', trackedReleases: 'erfasste Releases',
     latestEyebrow: 'AKTUELLE MELDUNGEN', releaseStream: 'Release-Stream', searchPlaceholder: 'Releases durchsuchen', projectLabel: 'Projekt', filterLabel: 'Nach Projekt filtern', allProjects: 'Alle Projekte',
     limitLabel: 'Neueste pro Feed', limitAria: 'Anzahl der neuesten Releases pro Feed', saveLimit: 'Speichern', limitSaved: 'Anzeigelimit gespeichert.', limitInvalid: 'Bitte eine ganze Zahl von 1 bis 500 pro Feed wählen.', showingCount: '{shown} von {total} Einträgen',
@@ -92,13 +92,18 @@ function publicFeedUrl() {
   return snapshot.public_feed_url || new URL('/rss.xml', window.location.href).href;
 }
 
+function feedCopiedMessage(url) {
+  const hostname = new URL(url).hostname;
+  return t(['localhost', '127.0.0.1', '::1'].includes(hostname) ? 'feedCopiedLocal' : 'feedCopied');
+}
+
 async function copyFeedUrl() {
   if (!stateLoaded) await load();
   const url = publicFeedUrl();
   try {
     if (navigator.clipboard?.writeText) {
       await navigator.clipboard.writeText(url);
-      toast(t('feedCopied'));
+      toast(feedCopiedMessage(url));
       return;
     }
   } catch (_) {
@@ -119,7 +124,7 @@ async function copyFeedUrl() {
   } finally {
     field.remove();
   }
-  if (copied) toast(t('feedCopied'));
+  if (copied) toast(feedCopiedMessage(url));
   else window.prompt(t('copyFeedManually'), url);
 }
 

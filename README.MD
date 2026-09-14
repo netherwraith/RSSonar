@@ -44,6 +44,17 @@ Click **Copy RSS link** to copy the complete feed URL. Without `PUBLIC_FEED_URL`
 
 For access from another device, open `http://SERVER_IP:8765` and set `PUBLIC_URL=http://SERVER_IP:8765` in `.env` (or use your HTTPS hostname). By default, Docker publishes port `8765` on all server interfaces (`RSSONAR_BIND=0.0.0.0`). You can set `RSSONAR_BIND` to the server's actual LAN IP to restrict it to that interface. Allow the port through the server firewall if you want direct access; prefer an HTTPS reverse proxy for public access.
 
+## RSS readers on another device
+
+`http://localhost:8765/rss.xml` works only when the reader fetches the feed from the same machine as RSSonar. On another device, `localhost` points to that device, not your RSSonar server. Subscribe to a URL that opens from the reader device: `http://SERVER_IP:8765/rss.xml` on your LAN or `https://releases.example.org/rss.xml` through your reverse proxy. In your **existing** `.env`, set both values to the actual reachable address, for example:
+
+```dotenv
+PUBLIC_URL=https://releases.example.org
+PUBLIC_FEED_URL=https://releases.example.org/rss.xml
+```
+
+Keep your existing `ADMIN_TOKEN` and other settings. Run `docker compose up -d` to apply the changed environment, then open the exact feed URL in a browser on the reader device before adding it to Reeder. If the URL does not return RSS XML there, check the server IP, port/firewall, reverse-proxy route for `/rss.xml`, and any proxy login. A reader cannot use a localhost URL from another device or from a remote feed-fetching service.
+
 ## Updating an existing server
 
 Run these commands in the cloned repository on the server:
