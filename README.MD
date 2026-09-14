@@ -22,8 +22,8 @@
 ## Quick start with Docker Compose
 
 ```sh
-git clone https://github.com/netherwraith/rssonar.git
-cd rssonar
+git clone https://github.com/netherwraith/RSSonar.git
+cd RSSonar
 cp .env.example .env
 openssl rand -hex 32
 ```
@@ -45,7 +45,7 @@ For access from another device, open `http://SERVER_IP:8765` and set `PUBLIC_URL
 Run these commands in the cloned repository on the server:
 
 ```sh
-cd /path/to/rssonar
+cd /path/to/RSSonar
 git pull --ff-only
 docker compose up -d --build
 ```

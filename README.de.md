@@ -22,8 +22,8 @@
 ## Schnellstart mit Docker Compose
 
 ```sh
-git clone https://github.com/netherwraith/rssonar.git
-cd rssonar
+git clone https://github.com/netherwraith/RSSonar.git
+cd RSSonar
 cp .env.example .env
 openssl rand -hex 32
 ```
